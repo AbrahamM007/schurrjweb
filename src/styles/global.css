@@ -33,6 +33,45 @@ a {
   min-height: 100vh;
   background-color: #000;
   color: #fff;
+  position: relative;
+}
+
+.top-bar {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.login-btn,
+.admin-link-btn,
+.logout-btn {
+  padding: 0.7rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-family: "Robuck", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.login-btn:hover,
+.admin-link-btn:hover,
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.top-bar-user {
+  display: flex;
+  gap: 0.8rem;
 }
 
 .main-content {
