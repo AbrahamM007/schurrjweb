@@ -1,27 +1,38 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
 let client = null;
 
 function getClient() {
   if (!client) {
-    const key = import.meta.env.VITE_GEMINI_API_KEY;
+    const key = import.meta.env.VITE_OPENAI_API_KEY;
     if (!key) return null;
-    client = new GoogleGenerativeAI(key);
+    client = new OpenAI({ apiKey: key, dangerouslyAllowBrowser: true });
   }
   return client;
 }
 
 export async function generateHeadlineSuggestion(bodyText) {
   try {
-    const genAI = getClient();
-    if (!genAI) return "";
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const prompt =
-      "You are helping high school journalism students. " +
-      "Read their story and suggest a punchy newspaper-style headline (max 12 words).\n\n" +
-      bodyText.slice(0, 2000);
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
+    const openai = getClient();
+    if (!openai) return "";
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are helping high school journalism students. Suggest a punchy newspaper-style headline (max 12 words). Respond with ONLY the headline, no quotes or extra text."
+        },
+        {
+          role: "user",
+          content: `Read their story and suggest a headline:\n\n${bodyText.slice(0, 2000)}`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 50
+    });
+
+    const text = completion.choices[0].message.content.trim();
     return text.replace(/^"|"$/g, "");
   } catch (e) {
     console.error(e);

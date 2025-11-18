@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.24.1";
+import OpenAI from "npm:openai@4.73.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,8 +28,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const geminiKey = Deno.env.get("VITE_GEMINI_API_KEY");
-    if (!geminiKey) {
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) {
       return new Response(
         JSON.stringify({ error: "AI service not configured" }),
         {
@@ -39,8 +39,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const genAI = new GoogleGenerativeAI(geminiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const openai = new OpenAI({ apiKey: openaiKey });
 
     let prompt = "";
 
@@ -57,11 +56,11 @@ Analyze this chronicle and provide:
 Title: ${title || "Untitled"}
 Content: ${content.slice(0, 3000)}
 
-Respond in JSON format:
+Respond ONLY with valid JSON in this exact format:
 {
   "improvedTitle": "...",
   "summary": "...",
-  "tags": ["tag1", "tag2", ...],
+  "tags": ["tag1", "tag2"],
   "engagementScore": 75,
   "improvements": ["...", "...", "..."]
 }`;
@@ -76,10 +75,10 @@ Provide:
 3. Target audience (students, faculty, community, or all)
 4. Tone (formal, casual, critical, celebratory, informative)
 
-Respond in JSON:
+Respond ONLY with valid JSON:
 {
   "category": "...",
-  "topics": [...],
+  "topics": [],
   "audience": "...",
   "tone": "..."
 }`;
@@ -94,12 +93,12 @@ Provide:
 3. Why this might be trending
 4. Suggested angles to increase appeal
 
-Respond in JSON:
+Respond ONLY with valid JSON:
 {
   "trendingScore": 65,
-  "similarTopics": [...],
+  "similarTopics": [],
   "reason": "...",
-  "suggestedAngles": [...]
+  "suggestedAngles": []
 }`;
     } else if (analysisType === "engagement") {
       prompt = `Predict audience engagement for this content.
@@ -113,12 +112,12 @@ Provide:
 3. Weaknesses that may limit engagement
 4. Specific tips to increase engagement
 
-Respond in JSON:
+Respond ONLY with valid JSON:
 {
   "engagementScore": 70,
-  "strengths": [...],
-  "weaknesses": [...],
-  "tips": [...]
+  "strengths": [],
+  "weaknesses": [],
+  "tips": []
 }`;
     } else if (analysisType === "schedule") {
       const now = new Date();
@@ -139,7 +138,7 @@ Provide:
 3. Reasoning
 4. Alternative time slots
 
-Respond in JSON:
+Respond ONLY with valid JSON:
 {
   "dayOfWeek": "Monday",
   "timeOfDay": "15:00",
@@ -156,10 +155,10 @@ Provide:
 2. Common themes found
 3. How to make it more unique
 
-Respond in JSON:
+Respond ONLY with valid JSON:
 {
   "uniquenessScore": 85,
-  "commonThemes": [...],
+  "commonThemes": [],
   "uniquenessAdvice": "..."
 }`;
     } else {
@@ -169,27 +168,27 @@ Content: ${content.slice(0, 2000)}
 
 Provide a general analysis with insights.
 
-Respond in JSON format with your analysis.`;
+Respond ONLY with valid JSON format with your analysis.`;
     }
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-
-    let jsonStart = text.indexOf("{");
-    let jsonEnd = text.lastIndexOf("}");
-
-    if (jsonStart === -1 || jsonEnd === -1) {
-      return new Response(
-        JSON.stringify({ error: "AI response format error", rawResponse: text }),
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
         {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          role: "system",
+          content: "You are a helpful AI assistant for high school journalism. Always respond with valid JSON only, no markdown formatting or code blocks."
+        },
+        {
+          role: "user",
+          content: prompt
         }
-      );
-    }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+    });
 
-    const jsonStr = text.slice(jsonStart, jsonEnd + 1);
-    const analysis = JSON.parse(jsonStr);
+    const responseText = completion.choices[0].message.content || "{}";
+    const analysis = JSON.parse(responseText);
 
     return new Response(JSON.stringify(analysis), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
