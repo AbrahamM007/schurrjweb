@@ -14,6 +14,7 @@ export default function Layout() {
   const { user, logout } = useAuth();
 
   const isHome = location.pathname === "/";
+  const isLoginOrAdmin = location.pathname === "/login" || location.pathname === "/admin";
 
   return (
     <div className="app-shell">
@@ -33,16 +34,25 @@ export default function Layout() {
           </button>
         )}
       </div>
-      <main className={isHome ? "main-content" : "main-content with-side-nav"}>
-        {isHome ? null : (
-          <nav className="side-nav">
+      {!isHome && !isLoginOrAdmin && (
+        <nav className="page-navbar">
+          <NavLink to="/" className="nav-logo">
+            SCHURR JOURNALISM
+          </NavLink>
+          <div className="nav-links">
             {sections.map((s) => (
-              <NavLink key={s.to} to={s.to} className={({ isActive }) => (isActive ? "active" : "")}>
+              <NavLink
+                key={s.to}
+                to={s.to}
+                className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+              >
                 {s.label}
               </NavLink>
             ))}
-          </nav>
-        )}
+          </div>
+        </nav>
+      )}
+      <main className={isHome ? "main-content" : "main-content with-side-nav"}>
         <Outlet />
       </main>
     </div>
