@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  addDoc,
-  collection,
-  serverTimestamp
-} from "firebase/firestore";
-import { db, storage } from "../services/firebaseConfig";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { supabase } from "../services/supabaseClient";
 import { generateHeadlineSuggestion } from "../services/geminiClient";
 
 export default function Submit() {
@@ -49,18 +43,31 @@ export default function Submit() {
       let imageUrl = "";
       if (file) {
         const path = `submissions/${Date.now()}-${file.name}`;
-        const storageRef = ref(storage, path);
-        await uploadBytes(storageRef, file);
-        imageUrl = await getDownloadURL(storageRef);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('submissions')
+          .upload(path, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('submissions')
+          .getPublicUrl(path);
+
+        imageUrl = publicUrl;
       }
 
-      await addDoc(collection(db, "submissions"), {
-        ...form,
-        suggestedHeadline: geminiHeadline,
-        imageUrl,
-        status: "pending",
-        createdAt: serverTimestamp()
+      const { error } = await supabase.from('submissions').insert({
+        name: form.name,
+        email: form.email,
+        title: form.title,
+        body: form.body,
+        category: form.category,
+        suggested_headline: geminiHeadline,
+        image_url: imageUrl,
+        status: "pending"
       });
+
+      if (error) throw error;
 
       setForm({
         name: "",

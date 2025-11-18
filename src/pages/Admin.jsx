@@ -1,16 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  updateDoc
-} from "firebase/firestore";
-import { db } from "../services/firebaseConfig";
+import { supabase } from "../services/supabaseClient";
 import ScriptManager from "../components/ScriptManager";
 import TeamManager from "../components/TeamManager";
 import { useAuth } from "../hooks/useAuth";
@@ -36,76 +25,122 @@ export default function Admin() {
   });
 
   useEffect(() => {
-    const unsub1 = onSnapshot(
-      query(collection(db, "submissions"), orderBy("createdAt", "desc")),
-      (snap) => setSubmissions(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    );
-    const unsub2 = onSnapshot(
-      query(collection(db, "galleryItems"), orderBy("createdAt", "desc")),
-      (snap) => setGallery(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    );
-    const unsub3 = onSnapshot(
-      query(collection(db, "opinions"), orderBy("createdAt", "desc")),
-      (snap) => setOpinions(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    );
-    const unsub4 = onSnapshot(
-      query(collection(db, "weeklyVideos"), orderBy("createdAt", "desc")),
-      (snap) => setWeekly(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    );
+    fetchSubmissions();
+    fetchGallery();
+    fetchOpinions();
+    fetchWeekly();
+
+    const submissionsChannel = supabase
+      .channel('submissions_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, () => {
+        fetchSubmissions();
+      })
+      .subscribe();
+
+    const galleryChannel = supabase
+      .channel('gallery_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gallery_items' }, () => {
+        fetchGallery();
+      })
+      .subscribe();
+
+    const opinionsChannel = supabase
+      .channel('opinions_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'opinions' }, () => {
+        fetchOpinions();
+      })
+      .subscribe();
+
+    const weeklyChannel = supabase
+      .channel('weekly_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'weekly_videos' }, () => {
+        fetchWeekly();
+      })
+      .subscribe();
 
     return () => {
-      unsub1();
-      unsub2();
-      unsub3();
-      unsub4();
+      supabase.removeChannel(submissionsChannel);
+      supabase.removeChannel(galleryChannel);
+      supabase.removeChannel(opinionsChannel);
+      supabase.removeChannel(weeklyChannel);
     };
   }, []);
 
+  const fetchSubmissions = async () => {
+    const { data } = await supabase
+      .from('submissions')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setSubmissions(data);
+  };
+
+  const fetchGallery = async () => {
+    const { data } = await supabase
+      .from('gallery_items')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setGallery(data);
+  };
+
+  const fetchOpinions = async () => {
+    const { data } = await supabase
+      .from('opinions')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setOpinions(data);
+  };
+
+  const fetchWeekly = async () => {
+    const { data } = await supabase
+      .from('weekly_videos')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setWeekly(data);
+  };
+
   const approveSubmissionToCollection = async (sub) => {
     if (sub.category === "gallery") {
-      await addDoc(collection(db, "galleryItems"), {
-        title: sub.title || sub.suggestedHeadline || "Untitled",
+      await supabase.from('gallery_items').insert({
+        title: sub.title || sub.suggested_headline || "Untitled",
         credit: sub.name || sub.email,
-        imageUrl: sub.imageUrl || "",
-        createdAt: serverTimestamp()
+        image_url: sub.image_url || ""
       });
     } else {
-      await addDoc(collection(db, "opinions"), {
+      await supabase.from('opinions').insert({
         text: sub.body,
-        author: sub.name || "Student",
-        createdAt: serverTimestamp()
+        author: sub.name || "Student"
       });
     }
-    await updateDoc(doc(db, "submissions", sub.id), { status: "approved" });
+    await supabase.from('submissions').update({ status: "approved" }).eq('id', sub.id);
   };
 
   const deleteSubmission = async (id) => {
-    await deleteDoc(doc(db, "submissions", id));
+    await supabase.from('submissions').delete().eq('id', id);
   };
 
   const createGallery = async (e) => {
     e.preventDefault();
-    await addDoc(collection(db, "galleryItems"), {
-      ...galleryForm,
-      createdAt: serverTimestamp()
+    await supabase.from('gallery_items').insert({
+      title: galleryForm.title,
+      credit: galleryForm.credit,
+      image_url: galleryForm.imageUrl
     });
     setGalleryForm({ title: "", credit: "", imageUrl: "" });
   };
 
   const createOpinion = async (e) => {
     e.preventDefault();
-    await addDoc(collection(db, "opinions"), {
-      ...opinionForm,
-      createdAt: serverTimestamp()
+    await supabase.from('opinions').insert({
+      text: opinionForm.text,
+      author: opinionForm.author
     });
     setOpinionForm({ text: "", author: "" });
   };
 
   const saveWeekly = async (e) => {
     e.preventDefault();
-    await addDoc(collection(db, "weeklyVideos"), {
-      ...weeklyForm,
-      createdAt: serverTimestamp()
+    await supabase.from('weekly_videos').insert({
+      youtube_id: weeklyForm.youtubeId
     });
     setWeeklyForm({ youtubeId: "" });
   };
@@ -139,7 +174,7 @@ export default function Admin() {
                 {sub.email}
               </div>
               <div style={{ marginTop: "0.4rem", fontWeight: 600 }}>
-                {sub.title || sub.suggestedHeadline || "(no headline)"}
+                {sub.title || sub.suggested_headline || "(no headline)"}
               </div>
               <div className="text-muted" style={{ marginTop: "0.3rem" }}>
                 {sub.body?.slice(0, 200)}...
@@ -215,13 +250,13 @@ export default function Admin() {
                 <div className="admin-card-main">
                   <div style={{ fontWeight: 600 }}>{g.title}</div>
                   <div className="text-muted">
-                    {g.credit} • {g.imageUrl?.slice(0, 50)}
+                    {g.credit} • {g.image_url?.slice(0, 50)}
                   </div>
                 </div>
                 <div className="admin-card-actions">
                   <button
                     className="secondary-btn"
-                    onClick={() => deleteDoc(doc(db, "galleryItems", g.id))}
+                    onClick={() => supabase.from('gallery_items').delete().eq('id', g.id).then(fetchGallery)}
                   >
                     Delete
                   </button>
@@ -275,7 +310,7 @@ export default function Admin() {
                 <div className="admin-card-actions">
                   <button
                     className="secondary-btn"
-                    onClick={() => deleteDoc(doc(db, "opinions", op.id))}
+                    onClick={() => supabase.from('opinions').delete().eq('id', op.id).then(fetchOpinions)}
                   >
                     Delete
                   </button>
@@ -309,13 +344,13 @@ export default function Admin() {
             {weekly.map((v) => (
               <div key={v.id} className="admin-card">
                 <div className="admin-card-main">
-                  <div style={{ fontWeight: 600 }}>{v.youtubeId}</div>
+                  <div style={{ fontWeight: 600 }}>{v.youtube_id}</div>
                   <div className="text-muted">{v.id}</div>
                 </div>
                 <div className="admin-card-actions">
                   <button
                     className="secondary-btn"
-                    onClick={() => deleteDoc(doc(db, "weeklyVideos", v.id))}
+                    onClick={() => supabase.from('weekly_videos').delete().eq('id', v.id).then(fetchWeekly)}
                   >
                     Delete
                   </button>

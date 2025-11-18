@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "../services/firebaseConfig";
 import { supabase } from "../services/supabaseClient";
 
 const AuthContext = createContext(null);
@@ -9,45 +7,64 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [supabaseUser, setSupabaseUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      if (u && supabase) {
-        (async () => {
-          try {
-            const { data } = await supabase
-              .from('users')
-              .select('*')
-              .eq('email', u.email)
-              .maybeSingle();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserProfile(session.user);
+      } else {
+        setLoading(false);
+      }
+    });
 
-            if (data) {
-              setIsAdmin(data.is_admin);
-              setSupabaseUser(data);
-            } else {
-              setIsAdmin(false);
-              setSupabaseUser(null);
-            }
-          } catch (error) {
-            console.error('Error fetching user from Supabase:', error);
-            setIsAdmin(false);
-            setSupabaseUser(null);
-          }
-        })();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserProfile(session.user);
+      } else {
+        setIsAdmin(false);
+        setSupabaseUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchUserProfile = async (user) => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (data) {
+        setIsAdmin(data.role === 'admin');
+        setSupabaseUser(data);
       } else {
         setIsAdmin(false);
         setSupabaseUser(null);
       }
-    });
-    return () => unsub();
-  }, []);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setIsAdmin(false);
+      setSupabaseUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const value = {
     user,
     isAdmin,
     supabaseUser,
-    logout: () => signOut(auth)
+    loading,
+    logout: async () => {
+      await supabase.auth.signOut();
+    }
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

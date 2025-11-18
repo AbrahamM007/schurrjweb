@@ -1,31 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
-import { db } from "../services/firebaseConfig";
+import { supabase } from "../services/supabaseClient";
 
 export default function Opinions() {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    const q = query(collection(db, "opinions"), orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(q, (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      if (!list.length) {
-        setItems([
-          {
-            id: "placeholder1",
-            text: "Lorem ipsum dolor sit amet consectetur adipiscing elit.",
-            author: "John Doe"
-          },
-          {
-            id: "placeholder2",
-            text: "Student voices matter. Lorem ipsum dolor sit amet.",
-            author: "Jane Spartan"
-          }
-        ]);
-      } else setItems(list);
-    });
-    return () => unsub();
+    fetchOpinions();
+
+    const channel = supabase
+      .channel('opinions_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'opinions' }, () => {
+        fetchOpinions();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  const fetchOpinions = async () => {
+    const { data } = await supabase
+      .from('opinions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!data || data.length === 0) {
+      setItems([
+        {
+          id: "placeholder1",
+          text: "Lorem ipsum dolor sit amet consectetur adipiscing elit.",
+          author: "John Doe"
+        },
+        {
+          id: "placeholder2",
+          text: "Student voices matter. Lorem ipsum dolor sit amet.",
+          author: "Jane Spartan"
+        }
+      ]);
+    } else {
+      setItems(data);
+    }
+  };
 
   return (
     <section className="opinions-shell">

@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../services/firebaseConfig";
 import { supabase } from "../services/supabaseClient";
 
 export default function Login() {
@@ -18,32 +16,52 @@ export default function Login() {
     setBusy(true);
     try {
       if (isSignUp) {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const isAdmin = adminPassword === "schurrjw";
+        const role = adminPassword === "schurrjw" ? "admin" : "writer";
 
-        await supabase.from('users').insert({
-          id: userCredential.user.uid,
-          email: email,
-          display_name: displayName || email.split('@')[0],
-          is_admin: isAdmin
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: displayName || email.split('@')[0],
+              role: role
+            }
+          }
         });
+
+        if (signUpError) throw signUpError;
+
+        if (authData.user) {
+          const { error: profileError } = await supabase.from('profiles').insert({
+            id: authData.user.id,
+            email: email,
+            full_name: displayName || email.split('@')[0],
+            role: role
+          });
+
+          if (profileError) throw profileError;
+        }
 
         navigate("/admin");
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
         navigate("/admin");
       }
     } catch (err) {
       console.error("Auth error:", err);
       let errorMsg = isSignUp ? "Sign up failed. " : "Login failed. ";
 
-      if (err.code === 'auth/email-already-in-use') {
+      if (err.message?.includes('already registered')) {
         errorMsg += "This email is already registered. Try logging in instead.";
-      } else if (err.code === 'auth/weak-password') {
+      } else if (err.message?.includes('Password')) {
         errorMsg += "Password should be at least 6 characters.";
-      } else if (err.code === 'auth/invalid-email') {
-        errorMsg += "Invalid email address.";
-      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+      } else if (err.message?.includes('Invalid')) {
         errorMsg += "Invalid email or password.";
       } else {
         errorMsg += err.message || "Please try again.";
