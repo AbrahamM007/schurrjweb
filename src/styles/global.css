@@ -453,11 +453,12 @@ body[data-light-mode="true"] .logout-btn:hover {
 }
 
 .panel-title {
-  font-family: "Milker", sans-serif;
-  font-size: clamp(2.6rem, 4.8vw, 3.2rem);
-  letter-spacing: 0.16em;
+  font-family: "Robuck", sans-serif;
+  font-size: clamp(2.4rem, 4.5vw, 3rem);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 2rem;
+  font-weight: 400;
 }
 
 .form-grid {
@@ -467,11 +468,13 @@ body[data-light-mode="true"] .logout-btn:hover {
 }
 
 .field-label {
+  font-family: "Robuck", sans-serif;
   font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   margin-bottom: 0.3rem;
-  opacity: 0.8;
+  opacity: 0.85;
+  font-weight: 400;
 }
 
 .field-input,
@@ -539,8 +542,10 @@ body[data-light-mode="true"] .logout-btn:hover {
 }
 
 .submission-meta {
+  font-family: "Robuck", sans-serif;
   font-size: 0.8rem;
   opacity: 0.7;
+  letter-spacing: 0.02em;
 }
 
 .admin-tabs {
@@ -553,11 +558,12 @@ body[data-light-mode="true"] .logout-btn:hover {
 }
 
 .admin-tab {
+  font-family: "Robuck", sans-serif;
   padding: 0.85rem 1.5rem;
   border: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
   background: transparent;
