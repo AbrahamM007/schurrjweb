@@ -34,8 +34,22 @@ export default function Login() {
         navigate("/admin");
       }
     } catch (err) {
-      console.error(err);
-      alert(isSignUp ? "Sign up failed. User may already exist." : "Login failed. Check email/password.");
+      console.error("Auth error:", err);
+      let errorMsg = isSignUp ? "Sign up failed. " : "Login failed. ";
+
+      if (err.code === 'auth/email-already-in-use') {
+        errorMsg += "This email is already registered. Try logging in instead.";
+      } else if (err.code === 'auth/weak-password') {
+        errorMsg += "Password should be at least 6 characters.";
+      } else if (err.code === 'auth/invalid-email') {
+        errorMsg += "Invalid email address.";
+      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        errorMsg += "Invalid email or password.";
+      } else {
+        errorMsg += err.message || "Please try again.";
+      }
+
+      alert(errorMsg);
     } finally {
       setBusy(false);
     }
