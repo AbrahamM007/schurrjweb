@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../services/supabaseClient";
-import OpenAI from "openai";
 import { useAuth } from "../hooks/useAuth";
 
 export default function ScriptManager() {
@@ -63,40 +62,32 @@ export default function ScriptManager() {
         return;
       }
 
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      if (!apiKey) {
-        alert("OpenAI API key not found. Please add VITE_OPENAI_API_KEY to your .env file.");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert("You must be logged in to generate scripts");
         setGenerating(null);
         return;
       }
 
-      const openai = new OpenAI({
-        apiKey: apiKey,
-        dangerouslyAllowBrowser: true
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-script`;
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: script.gemini_prompt
+        })
       });
 
-      const prompt = `You are a creative video script writer for a high school news channel.
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to generate script");
+      }
 
-Based on this prompt: ${script.gemini_prompt}
-
-Write a professional, engaging video script for Spartan Weekly. Include:
-- An attention-grabbing introduction
-- Clear main content sections
-- A strong conclusion
-- Natural transitions between sections
-- Keep it concise (2-3 minutes when read aloud)`;
-
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "You are a creative video script writer for a high school news channel." },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 1500
-      });
-
-      const generatedScript = completion.choices[0].message.content;
+      const { script: generatedScript } = await response.json();
 
       const { error: updateError } = await supabase
         .from("scripts")
