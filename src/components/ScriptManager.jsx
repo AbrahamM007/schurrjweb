@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../services/supabaseClient";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { useAuth } from "../hooks/useAuth";
 
 export default function ScriptManager() {
@@ -63,15 +63,17 @@ export default function ScriptManager() {
         return;
       }
 
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
       if (!apiKey) {
-        alert("Gemini API key not found. Please check your .env file.");
+        alert("OpenAI API key not found. Please add VITE_OPENAI_API_KEY to your .env file.");
         setGenerating(null);
         return;
       }
 
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const openai = new OpenAI({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true
+      });
 
       const prompt = `You are a creative video script writer for a high school news channel.
 
@@ -84,8 +86,17 @@ Write a professional, engaging video script for Spartan Weekly. Include:
 - Natural transitions between sections
 - Keep it concise (2-3 minutes when read aloud)`;
 
-      const result = await model.generateContent(prompt);
-      const generatedScript = result.response.text();
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a creative video script writer for a high school news channel." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 1500
+      });
+
+      const generatedScript = completion.choices[0].message.content;
 
       const { error: updateError } = await supabase
         .from("scripts")
@@ -149,7 +160,7 @@ Write a professional, engaging video script for Spartan Weekly. Include:
         Video Scripts
       </h2>
       <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
-        Create scripts and use Gemini AI to generate video content
+        Create scripts and use AI to generate video content
       </p>
 
       <form onSubmit={handleCreateScript} style={{ marginBottom: "2rem" }}>
@@ -165,7 +176,7 @@ Write a professional, engaging video script for Spartan Weekly. Include:
             />
           </div>
           <div>
-            <div className="field-label">Gemini Prompt</div>
+            <div className="field-label">AI Prompt</div>
             <textarea
               className="field-textarea"
               value={form.gemini_prompt}
