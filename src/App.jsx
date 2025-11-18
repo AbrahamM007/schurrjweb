@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Gallery from "./pages/Gallery";
-import Opinions from "./pages/Opinions";
+import Chronicles from "./pages/Chronicles";
 import Weekly from "./pages/Weekly";
 import Submit from "./pages/Submit";
 import Admin from "./pages/Admin";
@@ -24,7 +24,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/gallery" element={<Gallery />} />
-          <Route path="/opinions" element={<Opinions />} />
+          <Route path="/chronicles" element={<Chronicles />} />
           <Route path="/weekly" element={<Weekly />} />
           <Route path="/submit" element={<Submit />} />
           <Route

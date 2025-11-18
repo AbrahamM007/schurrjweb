@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../services/supabaseClient";
 import ScriptManager from "../components/ScriptManager";
 import TeamManager from "../components/TeamManager";
+import ChroniclesManager from "../components/ChroniclesManager";
+import AIAnalyticsDashboard from "../components/AIAnalyticsDashboard";
 import { useAuth } from "../hooks/useAuth";
 
-const tabs = ["submissions", "gallery", "opinions", "weekly", "scripts", "team"];
+const tabs = ["submissions", "gallery", "chronicles", "weekly", "scripts", "team", "analytics"];
 
 export default function Admin() {
   const { isAdmin } = useAuth();
@@ -363,6 +365,8 @@ export default function Admin() {
 
       {activeTab === "scripts" && isAdmin && <ScriptManager />}
       {activeTab === "team" && <TeamManager />}
+      {activeTab === "chronicles" && <ChroniclesManager />}
+      {activeTab === "analytics" && <AIAnalyticsDashboard />}
     </section>
   );
 }

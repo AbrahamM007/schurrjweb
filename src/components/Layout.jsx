@@ -4,7 +4,7 @@ import { useAuth } from "../hooks/useAuth";
 
 const sections = [
   { to: "/gallery", label: "Gallery" },
-  { to: "/opinions", label: "Opinions" },
+  { to: "/chronicles", label: "Chronicles" },
   { to: "/weekly", label: "News" }
 ];
 

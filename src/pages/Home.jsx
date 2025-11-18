@@ -5,7 +5,7 @@ import hero from "../assets/images/hero.png";
 // Reordering links to match the image: NEWS, SPORTS, OPINIONS, GALLERY
 const navLinks = [
   { to: "/weekly", label: "NEWS" },
-  { to: "/opinions", label: "OPINIONS" },
+  { to: "/chronicles", label: "CHRONICLES" },
   { to: "/gallery", label: "GALLERY" },
 ];
 
