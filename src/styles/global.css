@@ -16,12 +16,18 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   font-family: "Robuck", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   background-color: #000;
   color: #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -123,11 +129,12 @@ body[data-light-mode="true"] .logout-btn:hover {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #96c7bf;
-  transition: opacity 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .nav-logo:hover {
   opacity: 0.8;
+  transform: scale(1.05);
 }
 
 .nav-links {
@@ -143,12 +150,16 @@ body[data-light-mode="true"] .logout-btn:hover {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.7);
-  transition: color 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
 }
 
 .nav-link:hover {
   color: #fff;
+  background: rgba(150, 199, 191, 0.1);
+  transform: translateY(-2px);
 }
 
 .nav-link.active {
@@ -161,8 +172,10 @@ body[data-light-mode="true"] .logout-btn:hover {
   bottom: -8px;
   left: 0;
   right: 0;
-  height: 2px;
-  background: #96c7bf;
+  height: 3px;
+  background: linear-gradient(90deg, #96c7bf, #7ab5ab);
+  box-shadow: 0 2px 8px rgba(150, 199, 191, 0.5);
+  border-radius: 2px;
 }
 
 .main-content.with-side-nav {
@@ -186,7 +199,6 @@ body[data-light-mode="true"] .logout-btn:hover {
   inset: 0;
   background-position: center;
   background-size: cover;
-  /* Add a dark gradient overlay for text legibility and image mood */
   background-image: linear-gradient(
       to top,
       rgba(0, 0, 0, 0.8) 0%,
@@ -194,6 +206,7 @@ body[data-light-mode="true"] .logout-btn:hover {
       rgba(0, 0, 0, 0.5) 100%
     ),
     var(--_bg-image);
+  transition: background-position 0.3s ease;
 }
 
 .hero-overlay {
@@ -251,6 +264,18 @@ body[data-light-mode="true"] .logout-btn:hover {
   color: #fff;
   line-height: 0.9;
   left: 50px;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-title span {
@@ -342,7 +367,14 @@ body[data-light-mode="true"] .logout-btn:hover {
   aspect-ratio: 9 / 16;
   background: #111;
   overflow: hidden;
-  border-radius: 0.5rem;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gallery-slider:hover {
+  transform: scale(1.02);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(150, 199, 191, 0.3);
 }
 
 .gallery-slide {
@@ -350,6 +382,17 @@ body[data-light-mode="true"] .logout-btn:hover {
   height: 100%;
   background-position: center;
   background-size: cover;
+  transition: transform 0.5s ease;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .gallery-nav-btn {
@@ -358,11 +401,28 @@ body[data-light-mode="true"] .logout-btn:hover {
   transform: translateY(-50%);
   width: 54px;
   height: 92px;
-  background: #fff;
+  background: linear-gradient(135deg, #fff, #f5f5f5);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-nav-btn:hover {
+  background: linear-gradient(135deg, #96c7bf, #7ab5ab);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 6px 20px rgba(150, 199, 191, 0.4);
+}
+
+.gallery-nav-btn:hover span {
+  color: #fff;
+}
+
+.gallery-nav-btn:active {
+  transform: translateY(-50%) scale(1.05);
 }
 
 .gallery-nav-btn span {
@@ -395,6 +455,7 @@ body[data-light-mode="true"] .logout-btn:hover {
   font-size: clamp(4rem, 10vw, 6rem);
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
 }
 
 /* Opinions page */
@@ -419,12 +480,28 @@ body[data-light-mode="true"] .logout-btn:hover {
   font-family: "Milker", sans-serif;
   font-size: 1.4rem;
   text-transform: uppercase;
+  transition: all 0.3s ease;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: default;
+}
+
+.opinion-item:hover {
+  background: rgba(150, 199, 191, 0.05);
+  transform: translateX(5px);
+  color: #96c7bf;
 }
 
 .opinion-author {
   margin-top: 0.7rem;
   font-family: "Milker", sans-serif;
   font-size: 1.3rem;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.opinion-item:hover .opinion-author {
+  opacity: 1;
 }
 
 .opinions-rail {
@@ -480,11 +557,22 @@ body[data-light-mode="true"] .logout-btn:hover {
 .field-select {
   width: 100%;
   padding: 0.7rem 0.9rem;
-  border-radius: 0.35rem;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   background-color: #050505;
   color: #fff;
   font-family: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.field-input:focus,
+.field-textarea:focus,
+.field-select:focus {
+  outline: none;
+  border-color: rgba(150, 199, 191, 0.6);
+  background-color: #0a0a0a;
+  box-shadow: 0 0 0 3px rgba(150, 199, 191, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
 .field-textarea {
@@ -514,18 +602,31 @@ body[data-light-mode="true"] .logout-btn:hover {
 .primary-btn {
   margin-top: 1.5rem;
   padding: 0.8rem 1.6rem;
-  border-radius: 0.35rem;
+  border-radius: 8px;
   border: none;
   background: linear-gradient(135deg, #96c7bf, #3a726a);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(150, 199, 191, 0.2);
+}
+
+.primary-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(150, 199, 191, 0.35);
+}
+
+.primary-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(150, 199, 191, 0.25);
 }
 
 .primary-btn:disabled {
   opacity: 0.5;
-  cursor: default;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .submission-list {
@@ -535,8 +636,15 @@ body[data-light-mode="true"] .logout-btn:hover {
 }
 
 .submission-item {
-  padding: 0.8rem 0;
+  padding: 1rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: padding 0.2s ease;
+}
+
+.submission-item:hover {
+  padding: 1rem 0.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
 }
 
 .submission-meta {
@@ -564,14 +672,15 @@ body[data-light-mode="true"] .logout-btn:hover {
   background: transparent;
   color: rgba(255, 255, 255, 0.6);
   position: relative;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 0;
   white-space: nowrap;
 }
 
 .admin-tab:hover {
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(150, 199, 191, 0.08);
+  transform: translateY(-1px);
 }
 
 .admin-tab.active {
@@ -585,8 +694,19 @@ body[data-light-mode="true"] .logout-btn:hover {
   bottom: -2px;
   left: 0;
   right: 0;
-  height: 2px;
-  background: #96c7bf;
+  height: 3px;
+  background: linear-gradient(90deg, #96c7bf, #7ab5ab);
+  box-shadow: 0 2px 8px rgba(150, 199, 191, 0.4);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .admin-card {
@@ -599,14 +719,14 @@ body[data-light-mode="true"] .logout-btn:hover {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .admin-card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(150, 199, 191, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(150, 199, 191, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(150, 199, 191, 0.1);
 }
 
 .admin-card-main {
@@ -621,7 +741,7 @@ body[data-light-mode="true"] .logout-btn:hover {
 
 .secondary-btn {
   padding: 0.6rem 1rem;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
@@ -630,13 +750,19 @@ body[data-light-mode="true"] .logout-btn:hover {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .secondary-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(150, 199, 191, 0.5);
-  transform: translateY(-1px);
+  background: rgba(150, 199, 191, 0.15);
+  border-color: rgba(150, 199, 191, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(150, 199, 191, 0.2);
+}
+
+.secondary-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(150, 199, 191, 0.15);
 }
 
 /* login */
@@ -653,9 +779,17 @@ body[data-light-mode="true"] .logout-btn:hover {
 .login-box {
   background-color: #050505;
   padding: 2rem 2.2rem;
-  border-radius: 0.5rem;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   width: min(420px, 90vw);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(150, 199, 191, 0.1);
+  animation: fadeInUp 0.6s ease-out;
+  transition: all 0.3s ease;
+}
+
+.login-box:hover {
+  border-color: rgba(150, 199, 191, 0.3);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(150, 199, 191, 0.2);
 }
 
 .login-title {
@@ -680,6 +814,49 @@ body[data-light-mode="true"] .logout-btn:hover {
 }
 
 /* responsiveness */
+
+@media (min-width: 1400px) {
+  .hero-title {
+    font-size: clamp(6rem, 10vw, 11rem);
+  }
+
+  .panel-shell,
+  .opinions-shell,
+  .gallery-shell {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .gallery-slider {
+    width: min(75vw, 1200px);
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) {
+  .hero-left {
+    font-size: 16rem;
+  }
+
+  .hero-title {
+    font-size: clamp(4rem, 9vw, 7rem);
+  }
+
+  .page-navbar {
+    padding: 0 2rem;
+  }
+
+  .main-content.with-side-nav {
+    padding: calc(70px + 2.5rem) 2rem 3rem;
+  }
+
+  .panel-shell {
+    padding: 3rem 2rem 4rem;
+  }
+
+  .gallery-slider {
+    width: min(80vw, 800px);
+  }
+}
 
 @media (max-width: 900px) {
   .top-bar {
@@ -716,16 +893,16 @@ body[data-light-mode="true"] .logout-btn:hover {
 
   .hero-center {
     position: absolute;
-    bottom: 100px;
+    bottom: 120px;
     left: 0;
     right: 0;
-    padding: 0 1.5rem;
+    padding: 0 2rem;
     display: flex;
     justify-content: flex-start;
   }
 
   .hero-title {
-    font-size: clamp(3rem, 11vw, 5rem);
+    font-size: clamp(3.5rem, 11vw, 6rem);
     letter-spacing: 0.05em;
   }
 
@@ -745,10 +922,12 @@ body[data-light-mode="true"] .logout-btn:hover {
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 1.5rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.85));
+    backdrop-filter: blur(10px);
+    padding: 1.75rem 1.5rem;
     pointer-events: auto;
     z-index: 10;
+    border-top: 1px solid rgba(150, 199, 191, 0.2);
   }
 
   .bottom-strip-inner {
@@ -764,17 +943,22 @@ body[data-light-mode="true"] .logout-btn:hover {
     color: #fff;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
     pointer-events: auto;
     cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
   }
 
   .bottom-strip-inner a:hover {
     color: #96c7bf;
+    background: rgba(150, 199, 191, 0.1);
+    transform: translateY(-2px);
   }
 
   .bottom-strip-inner a.active {
     color: #96c7bf;
+    background: rgba(150, 199, 191, 0.15);
   }
 
   .page-navbar {
@@ -851,8 +1035,9 @@ body[data-light-mode="true"] .logout-btn:hover {
   }
 
   .admin-tab {
-    padding: 0.75rem 1rem;
-    font-size: 0.75rem;
+    padding: 1rem 1.25rem;
+    font-size: 0.8rem;
+    min-height: 48px;
   }
 
   .admin-card {
@@ -980,8 +1165,16 @@ body[data-light-mode="true"] .logout-btn:hover {
   }
 
   .admin-tab {
-    padding: 0.7rem 0.8rem;
-    font-size: 0.7rem;
+    padding: 0.9rem 1rem;
+    font-size: 0.75rem;
+    min-height: 44px;
+  }
+
+  .bottom-strip-inner a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
