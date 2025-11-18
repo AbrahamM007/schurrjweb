@@ -11,10 +11,14 @@ import {
   updateDoc
 } from "firebase/firestore";
 import { db } from "../services/firebaseConfig";
+import ScriptManager from "../components/ScriptManager";
+import TeamManager from "../components/TeamManager";
+import { useAuth } from "../hooks/useAuth";
 
-const tabs = ["submissions", "gallery", "opinions", "weekly"];
+const tabs = ["submissions", "gallery", "opinions", "weekly", "scripts", "team"];
 
 export default function Admin() {
+  const { isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState("submissions");
   const [submissions, setSubmissions] = useState([]);
   const [gallery, setGallery] = useState([]);
@@ -110,8 +114,7 @@ export default function Admin() {
     <section className="panel-shell">
       <h1 className="panel-title">Admin dashboard</h1>
       <p className="text-muted" style={{ marginBottom: "1.2rem" }}>
-        Manage student submissions, gallery images, opinion blurbs, and Spartan
-        Weekly videos.
+        Manage content, create video scripts with AI, and assign team tasks.
       </p>
       <div className="admin-tabs">
         {tabs.map((tab) => (
@@ -322,6 +325,9 @@ export default function Admin() {
           </div>
         </>
       )}
+
+      {activeTab === "scripts" && isAdmin && <ScriptManager />}
+      {activeTab === "team" && <TeamManager />}
     </section>
   );
 }
