@@ -5,21 +5,15 @@ import hero from "../assets/images/hero.png";
 const navLinks = [
   {
     to: "/weekly",
-    label: "NEWS",
-    emoji: "📰",
-    description: "Latest updates"
+    label: "NEWS"
   },
   {
     to: "/chronicles",
-    label: "CHRONICLES",
-    emoji: "📖",
-    description: "Stories & features"
+    label: "CHRONICLES"
   },
   {
     to: "/gallery",
-    label: "GALLERY",
-    emoji: "📸",
-    description: "Visual stories"
+    label: "GALLERY"
   },
 ];
 
@@ -55,20 +49,14 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mobile-hero-cards">
-          {navLinks.map((link, index) => (
+        <div className="mobile-hero-menu">
+          {navLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
-              className="mobile-hero-card"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className="mobile-hero-link"
             >
-              <div className="mobile-hero-card-emoji">{link.emoji}</div>
-              <div className="mobile-hero-card-content">
-                <div className="mobile-hero-card-label">{link.label}</div>
-                <div className="mobile-hero-card-desc">{link.description}</div>
-              </div>
-              <div className="mobile-hero-card-arrow">→</div>
+              {link.label}
             </NavLink>
           ))}
         </div>
