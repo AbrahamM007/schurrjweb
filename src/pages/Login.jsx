@@ -18,7 +18,7 @@ export default function Login() {
       if (isSignUp) {
         const role = adminPassword === "schurrjw" ? "admin" : "writer";
 
-        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -30,17 +30,6 @@ export default function Login() {
         });
 
         if (signUpError) throw signUpError;
-
-        if (authData.user) {
-          const { error: profileError } = await supabase.from('profiles').insert({
-            id: authData.user.id,
-            email: email,
-            full_name: displayName || email.split('@')[0],
-            role: role
-          });
-
-          if (profileError) throw profileError;
-        }
 
         navigate("/admin");
       } else {
