@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabaseClient";
 import ScriptManager from "../components/ScriptManager";
 import TeamManager from "../components/TeamManager";
@@ -9,6 +10,7 @@ import { useAuth } from "../hooks/useAuth";
 const tabs = ["submissions", "gallery", "chronicles", "weekly", "scripts", "team", "analytics"];
 
 export default function Admin() {
+  const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState("submissions");
   const [submissions, setSubmissions] = useState([]);
@@ -164,30 +166,49 @@ export default function Admin() {
       background: "#f5f5f5",
       color: "#1a1a1a"
     } : {}}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <h1 className="panel-title">Admin dashboard</h1>
           <p className="text-muted" style={{ marginBottom: "1.2rem" }}>
             Manage content, create video scripts with AI, and assign team tasks.
           </p>
         </div>
-        <button
-          onClick={() => setLightMode(!lightMode)}
-          style={{
-            padding: "0.6rem 1.2rem",
-            background: lightMode ? "#1a1a1a" : "#f5f5f5",
-            color: lightMode ? "#f5f5f5" : "#1a1a1a",
-            border: "2px solid",
-            borderColor: lightMode ? "#1a1a1a" : "#f5f5f5",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontWeight: 700,
-            fontSize: "0.9rem",
-            transition: "all 0.3s ease"
-          }}
-        >
-          {lightMode ? "🌙 Dark Mode" : "☀️ Light Mode"}
-        </button>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <button
+            onClick={() => navigate("/")}
+            style={{
+              padding: "0.6rem 1.2rem",
+              background: "transparent",
+              color: lightMode ? "#1a1a1a" : "#fff",
+              border: "2px solid",
+              borderColor: lightMode ? "#1a1a1a" : "#96c7bf",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: 700,
+              fontSize: "0.9rem",
+              transition: "all 0.3s ease"
+            }}
+          >
+            ← Home
+          </button>
+          <button
+            onClick={() => setLightMode(!lightMode)}
+            style={{
+              padding: "0.6rem 1.2rem",
+              background: lightMode ? "#1a1a1a" : "#f5f5f5",
+              color: lightMode ? "#f5f5f5" : "#1a1a1a",
+              border: "2px solid",
+              borderColor: lightMode ? "#1a1a1a" : "#f5f5f5",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: 700,
+              fontSize: "0.9rem",
+              transition: "all 0.3s ease"
+            }}
+          >
+            {lightMode ? "🌙 Dark Mode" : "☀️ Light Mode"}
+          </button>
+        </div>
       </div>
       <div className="admin-tabs">
         {tabs.map((tab) => (
