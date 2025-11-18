@@ -15,7 +15,7 @@ export async function generateHeadlineSuggestion(bodyText) {
   try {
     const genAI = getClient();
     if (!genAI) return "";
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const prompt =
       "You are helping high school journalism students. " +
       "Read their story and suggest a punchy newspaper-style headline (max 12 words).\n\n" +
