@@ -731,10 +731,10 @@ body[data-light-mode="true"] .logout-btn:hover {
   .hero-title span:first-child {
     font-family: "Robuck", sans-serif;
     color: #96c7bf;
-    font-size: 1.15em;
+    font-size: 1.6em;
     display: block;
     line-height: 0.9;
-    margin-bottom: 0.2em;
+    margin-bottom: 0.15em;
     font-weight: 400;
   }
 
@@ -917,7 +917,7 @@ body[data-light-mode="true"] .logout-btn:hover {
 
   .hero-title span:first-child {
     font-family: "Robuck", sans-serif;
-    font-size: 1.2em;
+    font-size: 1.65em;
     line-height: 0.85;
     font-weight: 400;
   }
