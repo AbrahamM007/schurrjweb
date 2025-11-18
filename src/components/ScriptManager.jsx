@@ -33,13 +33,21 @@ export default function ScriptManager() {
 
   const handleCreateScript = async (e) => {
     e.preventDefault();
-    await supabase.from("scripts").insert({
+    const { error } = await supabase.from("scripts").insert({
       title: form.title,
       script_content: form.script_content,
+      content: form.script_content || "",
       gemini_prompt: form.gemini_prompt,
       video_status: "draft",
       created_by: supabaseUser?.id
     });
+
+    if (error) {
+      console.error("Create error:", error);
+      alert(`Failed to create script: ${error.message}`);
+      return;
+    }
+
     setForm({ title: "", script_content: "", gemini_prompt: "" });
     loadScripts();
   };
@@ -48,7 +56,21 @@ export default function ScriptManager() {
     setGenerating(scriptId);
     try {
       const script = scripts.find(s => s.id === scriptId);
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+
+      if (!script.gemini_prompt) {
+        alert("Please add a prompt before generating");
+        setGenerating(null);
+        return;
+      }
+
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        alert("Gemini API key not found. Please check your .env file.");
+        setGenerating(null);
+        return;
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const prompt = `You are a creative video script writer for a high school news channel.
@@ -65,18 +87,24 @@ Write a professional, engaging video script for Spartan Weekly. Include:
       const result = await model.generateContent(prompt);
       const generatedScript = result.response.text();
 
-      await supabase
+      const { error: updateError } = await supabase
         .from("scripts")
         .update({
           script_content: generatedScript,
+          content: generatedScript,
           updated_at: new Date().toISOString()
         })
         .eq("id", scriptId);
 
-      loadScripts();
+      if (updateError) {
+        console.error("Update error:", updateError);
+        alert(`Failed to save script: ${updateError.message}`);
+      } else {
+        loadScripts();
+      }
     } catch (error) {
       console.error("Generation failed:", error);
-      alert("Failed to generate script. Check console for details.");
+      alert(`Failed to generate script: ${error.message || 'Unknown error'}`);
     } finally {
       setGenerating(null);
     }
