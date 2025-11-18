@@ -61,12 +61,27 @@ a {
   letter-spacing: 0.05em;
 }
 
+body[data-light-mode="true"] .login-btn,
+body[data-light-mode="true"] .admin-link-btn,
+body[data-light-mode="true"] .logout-btn {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  color: #1a1a1a;
+}
+
 .login-btn:hover,
 .admin-link-btn:hover,
 .logout-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px);
+}
+
+body[data-light-mode="true"] .login-btn:hover,
+body[data-light-mode="true"] .admin-link-btn:hover,
+body[data-light-mode="true"] .logout-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(0, 0, 0, 0.5);
 }
 
 .top-bar-user {

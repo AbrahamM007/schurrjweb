@@ -28,6 +28,17 @@ export default function Admin() {
   const [lightMode, setLightMode] = useState(false);
 
   useEffect(() => {
+    if (lightMode) {
+      document.body.setAttribute('data-light-mode', 'true');
+    } else {
+      document.body.removeAttribute('data-light-mode');
+    }
+    return () => {
+      document.body.removeAttribute('data-light-mode');
+    };
+  }, [lightMode]);
+
+  useEffect(() => {
     fetchSubmissions();
     fetchGallery();
     fetchOpinions();
