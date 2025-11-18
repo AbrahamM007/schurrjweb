@@ -11,19 +11,24 @@ export function AuthProvider({ children }) {
   const [supabaseUser, setSupabaseUser] = useState(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (u) {
-        const { data } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', u.email)
-          .maybeSingle();
+        (async () => {
+          const { data } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', u.email)
+            .maybeSingle();
 
-        if (data) {
-          setIsAdmin(data.is_admin);
-          setSupabaseUser(data);
-        }
+          if (data) {
+            setIsAdmin(data.is_admin);
+            setSupabaseUser(data);
+          } else {
+            setIsAdmin(false);
+            setSupabaseUser(null);
+          }
+        })();
       } else {
         setIsAdmin(false);
         setSupabaseUser(null);
