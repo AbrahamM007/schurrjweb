@@ -506,16 +506,28 @@ a {
 }
 
 .admin-card {
-  padding: 0.8rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  gap: 0.7rem;
+  gap: 1.5rem;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.admin-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(150, 199, 191, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .admin-card-main {
   flex: 1;
+  min-width: 0;
 }
 
 .admin-card-actions {
@@ -524,15 +536,23 @@ a {
 }
 
 .secondary-btn {
-  padding: 0.4rem 0.8rem;
-  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   color: inherit;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.05em;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(150, 199, 191, 0.5);
+  transform: translateY(-1px);
 }
 
 /* login */
