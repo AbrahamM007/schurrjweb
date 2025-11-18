@@ -35,6 +35,8 @@ export default function Home() {
 
         <div className="hero-center">
           <div className="hero-title">
+            <span>SCHURR</span>
+            <br />
             <span>JOURNALISM</span>
           </div>
         </div>

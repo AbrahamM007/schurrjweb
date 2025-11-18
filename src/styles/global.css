@@ -668,6 +668,8 @@ body[data-light-mode="true"] .logout-btn:hover {
     right: 0;
     background: rgba(0, 0, 0, 0.8);
     padding: 1.5rem;
+    pointer-events: auto;
+    z-index: 10;
   }
 
   .bottom-strip-inner {
@@ -684,6 +686,12 @@ body[data-light-mode="true"] .logout-btn:hover {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     transition: color 0.3s ease;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .bottom-strip-inner a:hover {
+    color: #96c7bf;
   }
 
   .bottom-strip-inner a.active {
@@ -814,10 +822,12 @@ body[data-light-mode="true"] .logout-btn:hover {
 
   .bottom-strip {
     padding: 1.2rem 1rem;
+    pointer-events: auto;
   }
 
   .bottom-strip-inner a {
     font-size: 1rem;
+    pointer-events: auto;
   }
 
   .opinions-grid {
