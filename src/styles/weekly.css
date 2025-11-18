@@ -83,7 +83,25 @@
 /* Responsiveness for weekly section on smaller screens */
 @media (max-width: 900px) {
   .weekly-shell {
-    /* Switches to a single column layout on mobile/tablet */
     grid-template-columns: minmax(0, 1fr);
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .weekly-header {
+    font-size: clamp(2.8rem, 8vw, 4.5rem);
+  }
+
+  .weekly-video-frame {
+    margin-top: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .weekly-shell {
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .weekly-header {
+    font-size: clamp(2.2rem, 9vw, 3.5rem);
   }
 }

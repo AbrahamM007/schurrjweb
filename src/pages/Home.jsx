@@ -18,12 +18,9 @@ export default function Home() {
           backgroundImage: `url(${hero})`,
         }}
       />
-      {/* Remove hero-overlay for a darker image blend instead of a pure color overlay */}
       <div className="hero-content">
-        {/* Vertical text on the left */}
         <div className="hero-left">SCHURR</div>
 
-        {/* Vertical navigation rail on the right */}
         <nav className="hero-right-rail">
           {navLinks.map((link) => (
             <NavLink
@@ -36,10 +33,23 @@ export default function Home() {
           ))}
         </nav>
 
-        {/* Large "JOURNALISM" text at the bottom */}
         <div className="hero-center">
           <div className="hero-title">
             <span>JOURNALISM</span>
+          </div>
+        </div>
+
+        <div className="bottom-strip">
+          <div className="bottom-strip-inner">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                {link.label}
+              </NavLink>
+            ))}
           </div>
         </div>
       </div>

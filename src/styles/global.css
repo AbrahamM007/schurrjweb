@@ -613,53 +613,241 @@ body[data-light-mode="true"] .logout-btn:hover {
 /* responsiveness */
 
 @media (max-width: 900px) {
+  .top-bar {
+    top: 15px;
+    right: 15px;
+  }
+
+  .login-btn,
+  .admin-link-btn,
+  .logout-btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.8rem;
+  }
+
+  .top-bar-user {
+    gap: 0.5rem;
+  }
+
   .hero {
     flex-direction: column;
-    min-height: 80vh;
+    min-height: 100vh;
   }
+
   .hero-content {
-    height: 80vh;
+    height: 100vh;
+    flex-direction: column;
   }
+
   .hero-left,
   .hero-right,
   .hero-right-rail {
     display: none;
   }
-  .main-content.with-side-nav {
-    padding-right: 0;
-  }
+
   .hero-center {
-    position: static;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    padding: 0 1.5rem 1.5rem;
+    position: absolute;
+    bottom: 100px;
+    left: 0;
+    right: 0;
+    padding: 0 1.5rem;
     display: flex;
     justify-content: flex-start;
   }
+
   .hero-title {
-    font-size: clamp(3rem, 12vw, 6rem);
+    font-size: clamp(3rem, 11vw, 5rem);
+    letter-spacing: 0.05em;
   }
+
   .bottom-strip {
-    padding-inline: 1.5rem;
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 1.5rem;
   }
+
+  .bottom-strip-inner {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .bottom-strip-inner a {
+    font-family: "Milker", sans-serif;
+    font-size: 1.2rem;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.3s ease;
+  }
+
+  .bottom-strip-inner a.active {
+    color: #96c7bf;
+  }
+
+  .main-content.with-side-nav {
+    padding: 2rem 1.5rem;
+  }
+
+  .panel-shell {
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .panel-title {
+    font-size: clamp(2rem, 6vw, 2.6rem);
+  }
+
   .opinions-shell {
     grid-template-columns: minmax(0, 1fr);
+    padding: 2rem 1.5rem 3rem;
   }
+
+  .opinions-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem 1.5rem;
+  }
+
+  .opinion-item {
+    font-size: 1.2rem;
+  }
+
+  .opinion-author {
+    font-size: 1.1rem;
+  }
+
   .opinions-rail {
     align-items: flex-start;
+    margin-top: 2rem;
+  }
+
+  .opinions-rail-label {
+    font-size: clamp(2.4rem, 5vw, 3rem);
+  }
+
+  .gallery-shell {
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .gallery-slider {
+    width: min(85vw, 600px);
+  }
+
+  .gallery-title-large {
+    font-size: clamp(3rem, 10vw, 5rem);
+  }
+
+  .admin-tabs {
+    gap: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .admin-tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+  }
+
+  .admin-card {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .admin-card-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .login-box {
+    padding: 1.8rem 1.5rem;
   }
 }
 
 @media (max-width: 700px) {
-  .gallery-shell {
-    padding-inline: 1.5rem;
+  .gallery-nav-btn {
+    width: 44px;
+    height: 72px;
   }
+
+  .gallery-nav-btn span {
+    font-size: 1.3rem;
+  }
+
   .gallery-nav-btn.left {
-    left: -1.8rem;
+    left: -1.5rem;
   }
+
   .gallery-nav-btn.right {
-    right: -1.8rem;
+    right: -1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-bar {
+    top: 10px;
+    right: 10px;
+  }
+
+  .login-btn,
+  .admin-link-btn,
+  .logout-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+
+  .hero-center {
+    bottom: 80px;
+    padding: 0 1rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+  }
+
+  .bottom-strip {
+    padding: 1.2rem 1rem;
+  }
+
+  .bottom-strip-inner a {
+    font-size: 1rem;
+  }
+
+  .opinions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-slider {
+    width: 90vw;
+  }
+
+  .gallery-nav-btn {
+    width: 36px;
+    height: 60px;
+  }
+
+  .gallery-nav-btn.left {
+    left: -1rem;
+  }
+
+  .gallery-nav-btn.right {
+    right: -1rem;
+  }
+
+  .panel-shell {
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .admin-tab {
+    padding: 0.7rem 0.8rem;
+    font-size: 0.7rem;
   }
 }
 
