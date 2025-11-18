@@ -2,11 +2,25 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import hero from "../assets/images/hero.png";
 
-// Reordering links to match the image: NEWS, SPORTS, OPINIONS, GALLERY
 const navLinks = [
-  { to: "/weekly", label: "NEWS" },
-  { to: "/chronicles", label: "CHRONICLES" },
-  { to: "/gallery", label: "GALLERY" },
+  {
+    to: "/weekly",
+    label: "NEWS",
+    emoji: "📰",
+    description: "Latest updates"
+  },
+  {
+    to: "/chronicles",
+    label: "CHRONICLES",
+    emoji: "📖",
+    description: "Stories & features"
+  },
+  {
+    to: "/gallery",
+    label: "GALLERY",
+    emoji: "📸",
+    description: "Visual stories"
+  },
 ];
 
 export default function Home() {
@@ -39,6 +53,24 @@ export default function Home() {
             <br />
             <span>JOURNALISM</span>
           </div>
+        </div>
+
+        <div className="mobile-hero-cards">
+          {navLinks.map((link, index) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className="mobile-hero-card"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <div className="mobile-hero-card-emoji">{link.emoji}</div>
+              <div className="mobile-hero-card-content">
+                <div className="mobile-hero-card-label">{link.label}</div>
+                <div className="mobile-hero-card-desc">{link.description}</div>
+              </div>
+              <div className="mobile-hero-card-arrow">→</div>
+            </NavLink>
+          ))}
         </div>
 
         <div className="bottom-strip">
