@@ -5,25 +5,35 @@ import { useAuth } from "../hooks/useAuth";
 
 export default function ScriptManager() {
   const [scripts, setScripts] = useState([]);
+  const [users, setUsers] = useState([]);
   const [form, setForm] = useState({ title: "", script_content: "", gemini_prompt: "" });
   const [generating, setGenerating] = useState(null);
   const { supabaseUser } = useAuth();
 
   useEffect(() => {
     loadScripts();
+    loadUsers();
   }, []);
 
   const loadScripts = async () => {
     const { data } = await supabase
-      .from("video_scripts")
-      .select("*")
+      .from("scripts")
+      .select("*, task:team_tasks(id, title, status, assigned_to, profiles!team_tasks_assigned_to_fkey(full_name))")
       .order("created_at", { ascending: false });
     setScripts(data || []);
   };
 
+  const loadUsers = async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("full_name", { ascending: true });
+    setUsers(data || []);
+  };
+
   const handleCreateScript = async (e) => {
     e.preventDefault();
-    await supabase.from("video_scripts").insert({
+    await supabase.from("scripts").insert({
       title: form.title,
       script_content: form.script_content,
       gemini_prompt: form.gemini_prompt,
@@ -56,10 +66,9 @@ Write a professional, engaging video script for Spartan Weekly. Include:
       const generatedScript = result.response.text();
 
       await supabase
-        .from("video_scripts")
+        .from("scripts")
         .update({
           script_content: generatedScript,
-          video_status: "completed",
           updated_at: new Date().toISOString()
         })
         .eq("id", scriptId);
@@ -73,9 +82,37 @@ Write a professional, engaging video script for Spartan Weekly. Include:
     }
   };
 
+  const handleCreateTask = async (scriptId) => {
+    const script = scripts.find(s => s.id === scriptId);
+
+    const { data: taskData } = await supabase
+      .from("team_tasks")
+      .insert({
+        title: `Produce: ${script.title}`,
+        description: `Complete video production for "${script.title}"`,
+        status: "pending"
+      })
+      .select()
+      .single();
+
+    if (taskData) {
+      await supabase
+        .from("scripts")
+        .update({
+          task_id: taskData.id,
+          video_status: "in_production"
+        })
+        .eq("id", scriptId);
+
+      loadScripts();
+    }
+  };
+
   const handleDeleteScript = async (scriptId) => {
-    await supabase.from("video_scripts").delete().eq("id", scriptId);
-    loadScripts();
+    if (confirm("Delete this script?")) {
+      await supabase.from("scripts").delete().eq("id", scriptId);
+      loadScripts();
+    }
   };
 
   return (
@@ -130,20 +167,38 @@ Write a professional, engaging video script for Spartan Weekly. Include:
         {scripts.map((script) => (
           <div key={script.id} className="admin-card">
             <div className="admin-card-main">
-              <div style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "0.3rem" }}>
-                {script.title}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", marginBottom: "0.5rem" }}>
+                <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>
+                  {script.title}
+                </div>
+                <span
+                  style={{
+                    padding: "0.2rem 0.6rem",
+                    borderRadius: "12px",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    background: script.video_status === "completed" ? "#27ae60" : script.video_status === "in_production" ? "#f39c12" : "#95a5a6",
+                    color: "white"
+                  }}
+                >
+                  {script.video_status}
+                </span>
               </div>
-              <div
-                className="text-muted"
-                style={{
-                  fontSize: "0.85rem",
+
+              {script.task && (
+                <div style={{
                   marginBottom: "0.5rem",
-                  textTransform: "uppercase",
-                  fontWeight: 600
-                }}
-              >
-                Status: {script.video_status}
-              </div>
+                  padding: "0.5rem",
+                  background: "rgba(150, 199, 191, 0.1)",
+                  borderRadius: "4px",
+                  fontSize: "0.85rem"
+                }}>
+                  <strong>Linked Task:</strong> {script.task.title} ({script.task.status})
+                  {script.task.profiles && ` - Assigned to ${script.task.profiles.full_name}`}
+                </div>
+              )}
+
               <div className="text-muted" style={{ marginBottom: "0.5rem", fontSize: "0.9rem" }}>
                 <strong>Prompt:</strong> {script.gemini_prompt}
               </div>
@@ -154,12 +209,13 @@ Write a professional, engaging video script for Spartan Weekly. Include:
                     style={{
                       marginTop: "0.4rem",
                       padding: "0.8rem",
-                      background: "#f5f5f5",
+                      background: "rgba(255, 255, 255, 0.05)",
                       borderRadius: "4px",
                       fontSize: "0.9rem",
                       maxHeight: "200px",
                       overflowY: "auto",
-                      whiteSpace: "pre-wrap"
+                      whiteSpace: "pre-wrap",
+                      border: "1px solid rgba(255, 255, 255, 0.1)"
                     }}
                   >
                     {script.script_content}
@@ -167,17 +223,28 @@ Write a professional, engaging video script for Spartan Weekly. Include:
                 </div>
               )}
             </div>
-            <div className="admin-card-actions">
+            <div className="admin-card-actions" style={{ flexDirection: "column", gap: "0.5rem" }}>
               <button
                 className="primary-btn"
                 onClick={() => handleGenerateScript(script.id)}
                 disabled={generating === script.id}
+                style={{ width: "100%" }}
               >
                 {generating === script.id ? "Generating..." : "Generate with AI"}
               </button>
+              {!script.task && script.script_content && (
+                <button
+                  className="secondary-btn"
+                  onClick={() => handleCreateTask(script.id)}
+                  style={{ width: "100%" }}
+                >
+                  Create Production Task
+                </button>
+              )}
               <button
                 className="secondary-btn"
                 onClick={() => handleDeleteScript(script.id)}
+                style={{ width: "100%" }}
               >
                 Delete
               </button>

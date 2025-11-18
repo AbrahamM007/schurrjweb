@@ -42,7 +42,7 @@ export default function TeamManager() {
   const loadTasks = async () => {
     const { data } = await supabase
       .from("team_tasks")
-      .select("*, profiles!team_tasks_assigned_to_fkey(full_name, email)")
+      .select("*, profiles!team_tasks_assigned_to_fkey(full_name, email), script:scripts!scripts_task_id_fkey(id, title, script_content)")
       .order("created_at", { ascending: false });
     setTasks(data || []);
   };
@@ -153,6 +153,19 @@ export default function TeamManager() {
           )}
         </div>
       </div>
+
+      {task.script && (
+        <div style={{
+          marginBottom: "0.75rem",
+          padding: "0.5rem",
+          background: "rgba(150, 199, 191, 0.15)",
+          borderRadius: "4px",
+          fontSize: "0.8rem",
+          border: "1px solid rgba(150, 199, 191, 0.3)"
+        }}>
+          📝 <strong>Script:</strong> {task.script.title}
+        </div>
+      )}
 
       {task.description && (
         <p className="kanban-card-description">{task.description}</p>
