@@ -13,18 +13,24 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      if (u) {
+      if (u && supabase) {
         (async () => {
-          const { data } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', u.email)
-            .maybeSingle();
+          try {
+            const { data } = await supabase
+              .from('users')
+              .select('*')
+              .eq('email', u.email)
+              .maybeSingle();
 
-          if (data) {
-            setIsAdmin(data.is_admin);
-            setSupabaseUser(data);
-          } else {
+            if (data) {
+              setIsAdmin(data.is_admin);
+              setSupabaseUser(data);
+            } else {
+              setIsAdmin(false);
+              setSupabaseUser(null);
+            }
+          } catch (error) {
+            console.error('Error fetching user from Supabase:', error);
             setIsAdmin(false);
             setSupabaseUser(null);
           }
