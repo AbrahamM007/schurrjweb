@@ -185,6 +185,11 @@ export default function ScriptManager() {
               onChange={(e) => setForm({ ...form, script_content: e.target.value })}
               placeholder="Or write your own script here..."
               rows={5}
+              style={{
+                fontFamily: "'Georgia', 'Times New Roman', serif",
+                fontSize: "1.05rem",
+                lineHeight: "1.7"
+              }}
             />
           </div>
         </div>
@@ -238,10 +243,12 @@ export default function ScriptManager() {
                   <div
                     style={{
                       marginTop: "0.4rem",
+                      fontFamily: "'Georgia', 'Times New Roman', serif",
+                      fontSize: "1rem",
+                      lineHeight: "1.7",
                       padding: "0.8rem",
                       background: "rgba(255, 255, 255, 0.05)",
                       borderRadius: "4px",
-                      fontSize: "0.9rem",
                       maxHeight: "200px",
                       overflowY: "auto",
                       whiteSpace: "pre-wrap",

@@ -62,7 +62,12 @@ export default function Chronicles() {
             <div style={{ fontWeight: 700, fontSize: '1.4rem', marginBottom: '0.5rem' }}>
               {chronicle.title}
             </div>
-            <div style={{ marginBottom: '0.75rem', lineHeight: '1.6' }}>
+            <div style={{
+              marginBottom: '0.75rem',
+              lineHeight: '1.7',
+              fontFamily: "'Georgia', 'Times New Roman', serif",
+              fontSize: '1.05rem'
+            }}>
               {chronicle.content?.slice(0, 300)}...
             </div>
             <div className="opinion-author">

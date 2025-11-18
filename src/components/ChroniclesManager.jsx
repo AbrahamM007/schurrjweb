@@ -165,6 +165,11 @@ export default function ChroniclesManager() {
               placeholder="Write your chronicle here... Use the AI tools below for assistance."
               rows={12}
               required
+              style={{
+                fontFamily: "'Georgia', 'Times New Roman', serif",
+                fontSize: "1.05rem",
+                lineHeight: "1.7"
+              }}
             />
             <div style={{ marginTop: "0.8rem", display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
               <button
@@ -355,7 +360,12 @@ export default function ChroniclesManager() {
                 />
               )}
 
-              <div style={{ marginBottom: "0.8rem", lineHeight: "1.6" }}>
+              <div style={{
+                marginBottom: "0.8rem",
+                lineHeight: "1.7",
+                fontFamily: "'Georgia', 'Times New Roman', serif",
+                fontSize: "1rem"
+              }}>
                 {chronicle.content.slice(0, 250)}...
               </div>
             </div>

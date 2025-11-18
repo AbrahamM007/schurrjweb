@@ -25,6 +25,7 @@ export default function Admin() {
     text: "",
     author: ""
   });
+  const [lightMode, setLightMode] = useState(false);
 
   useEffect(() => {
     fetchSubmissions();
@@ -148,11 +149,35 @@ export default function Admin() {
   };
 
   return (
-    <section className="panel-shell">
-      <h1 className="panel-title">Admin dashboard</h1>
-      <p className="text-muted" style={{ marginBottom: "1.2rem" }}>
-        Manage content, create video scripts with AI, and assign team tasks.
-      </p>
+    <section className="panel-shell" style={lightMode ? {
+      background: "#f5f5f5",
+      color: "#1a1a1a"
+    } : {}}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <div>
+          <h1 className="panel-title">Admin dashboard</h1>
+          <p className="text-muted" style={{ marginBottom: "1.2rem" }}>
+            Manage content, create video scripts with AI, and assign team tasks.
+          </p>
+        </div>
+        <button
+          onClick={() => setLightMode(!lightMode)}
+          style={{
+            padding: "0.6rem 1.2rem",
+            background: lightMode ? "#1a1a1a" : "#f5f5f5",
+            color: lightMode ? "#f5f5f5" : "#1a1a1a",
+            border: "2px solid",
+            borderColor: lightMode ? "#1a1a1a" : "#f5f5f5",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: 700,
+            fontSize: "0.9rem",
+            transition: "all 0.3s ease"
+          }}
+        >
+          {lightMode ? "🌙 Dark Mode" : "☀️ Light Mode"}
+        </button>
+      </div>
       <div className="admin-tabs">
         {tabs.map((tab) => (
           <button
@@ -161,6 +186,11 @@ export default function Admin() {
               "admin-tab" + (tab === activeTab ? " active" : "")
             }
             onClick={() => setActiveTab(tab)}
+            style={lightMode ? {
+              background: tab === activeTab ? "#1a1a1a" : "transparent",
+              color: tab === activeTab ? "#f5f5f5" : "#1a1a1a",
+              borderColor: "#1a1a1a"
+            } : {}}
           >
             {tab}
           </button>
