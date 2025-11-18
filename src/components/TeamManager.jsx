@@ -5,11 +5,12 @@ import { useAuth } from "../hooks/useAuth";
 export default function TeamManager() {
   const [tasks, setTasks] = useState([]);
   const [users, setUsers] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
     assigned_to: "",
-    priority: "medium",
     due_date: ""
   });
   const { supabaseUser, isAdmin } = useAuth();
@@ -17,249 +18,330 @@ export default function TeamManager() {
   useEffect(() => {
     loadTasks();
     loadUsers();
+
+    const channel = supabase
+      .channel('team_tasks_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'team_tasks'
+        },
+        () => {
+          loadTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadTasks = async () => {
     const { data } = await supabase
       .from("team_tasks")
-      .select(`
-        *,
-        assigned_user:users!team_tasks_assigned_to_fkey(display_name, email),
-        creator:users!team_tasks_created_by_fkey(display_name, email)
-      `)
+      .select("*, profiles!team_tasks_assigned_to_fkey(full_name, email)")
       .order("created_at", { ascending: false });
     setTasks(data || []);
   };
 
   const loadUsers = async () => {
     const { data } = await supabase
-      .from("users")
+      .from("profiles")
       .select("*")
-      .order("display_name", { ascending: true });
+      .order("full_name", { ascending: true });
     setUsers(data || []);
   };
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
-    await supabase.from("team_tasks").insert({
-      title: form.title,
-      description: form.description,
-      assigned_to: form.assigned_to || null,
-      priority: form.priority,
-      due_date: form.due_date || null,
-      status: "pending",
-      created_by: supabaseUser?.id
-    });
+    if (editingTask) {
+      await supabase
+        .from("team_tasks")
+        .update({
+          title: form.title,
+          description: form.description,
+          assigned_to: form.assigned_to || null,
+          due_date: form.due_date || null
+        })
+        .eq("id", editingTask.id);
+    } else {
+      await supabase.from("team_tasks").insert({
+        title: form.title,
+        description: form.description,
+        assigned_to: form.assigned_to || null,
+        due_date: form.due_date || null,
+        status: "pending"
+      });
+    }
     setForm({
       title: "",
       description: "",
       assigned_to: "",
-      priority: "medium",
       due_date: ""
     });
+    setShowForm(false);
+    setEditingTask(null);
     loadTasks();
   };
 
   const handleUpdateStatus = async (taskId, newStatus) => {
     await supabase
       .from("team_tasks")
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .update({ status: newStatus })
       .eq("id", taskId);
     loadTasks();
   };
 
   const handleDeleteTask = async (taskId) => {
-    await supabase.from("team_tasks").delete().eq("id", taskId);
-    loadTasks();
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "completed":
-        return "#27ae60";
-      case "in_progress":
-        return "#f39c12";
-      default:
-        return "#95a5a6";
+    if (confirm("Delete this task?")) {
+      await supabase.from("team_tasks").delete().eq("id", taskId);
+      loadTasks();
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "high":
-        return "#e74c3c";
-      case "medium":
-        return "#f39c12";
-      default:
-        return "#3498db";
-    }
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setForm({
+      title: task.title,
+      description: task.description || "",
+      assigned_to: task.assigned_to || "",
+      due_date: task.due_date || ""
+    });
+    setShowForm(true);
   };
 
-  return (
-    <div>
-      <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>
-        Team Task Management
-      </h2>
-      <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
-        Assign tasks to team members and track progress
-      </p>
+  const cancelForm = () => {
+    setShowForm(false);
+    setEditingTask(null);
+    setForm({
+      title: "",
+      description: "",
+      assigned_to: "",
+      due_date: ""
+    });
+  };
 
-      {isAdmin && (
-        <form onSubmit={handleCreateTask} style={{ marginBottom: "2rem" }}>
-          <div className="form-grid">
-            <div>
-              <div className="field-label">Task Title</div>
-              <input
-                className="field-input"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Edit episode 12"
-                required
-              />
-            </div>
-            <div>
-              <div className="field-label">Description</div>
-              <textarea
-                className="field-textarea"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Details about the task..."
-                rows={3}
-              />
-            </div>
-            <div>
-              <div className="field-label">Assign To</div>
-              <select
-                className="field-input"
-                value={form.assigned_to}
-                onChange={(e) => setForm({ ...form, assigned_to: e.target.value })}
-              >
-                <option value="">Unassigned</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.display_name} ({user.email})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <div className="field-label">Priority</div>
-              <select
-                className="field-input"
-                value={form.priority}
-                onChange={(e) => setForm({ ...form, priority: e.target.value })}
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-            <div>
-              <div className="field-label">Due Date</div>
-              <input
-                className="field-input"
-                type="date"
-                value={form.due_date}
-                onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-              />
-            </div>
-          </div>
-          <button className="primary-btn" style={{ marginTop: "1rem" }}>
-            Create Task
+  const groupedTasks = {
+    pending: tasks.filter((t) => t.status === "pending"),
+    in_progress: tasks.filter((t) => t.status === "in_progress"),
+    completed: tasks.filter((t) => t.status === "completed")
+  };
+
+  const renderTask = (task) => (
+    <div key={task.id} className="kanban-card">
+      <div className="kanban-card-header">
+        <h4 className="kanban-card-title">{task.title}</h4>
+        <div className="kanban-card-actions">
+          <button
+            className="kanban-icon-btn"
+            onClick={() => handleEditTask(task)}
+            title="Edit"
+          >
+            ✎
           </button>
-        </form>
+          {isAdmin && (
+            <button
+              className="kanban-icon-btn"
+              onClick={() => handleDeleteTask(task.id)}
+              title="Delete"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
+      {task.description && (
+        <p className="kanban-card-description">{task.description}</p>
       )}
 
-      <div className="submission-list">
-        {tasks.map((task) => (
-          <div key={task.id} className="admin-card">
-            <div className="admin-card-main" style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", marginBottom: "0.5rem" }}>
-                <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>
-                  {task.title}
-                </div>
-                <span
-                  style={{
-                    padding: "0.2rem 0.6rem",
-                    borderRadius: "12px",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    background: getPriorityColor(task.priority),
-                    color: "white"
-                  }}
-                >
-                  {task.priority}
-                </span>
-                <span
-                  style={{
-                    padding: "0.2rem 0.6rem",
-                    borderRadius: "12px",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    background: getStatusColor(task.status),
-                    color: "white"
-                  }}
-                >
-                  {task.status.replace("_", " ")}
-                </span>
-              </div>
-              {task.description && (
-                <div className="text-muted" style={{ marginBottom: "0.5rem" }}>
-                  {task.description}
-                </div>
-              )}
-              <div style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.5rem" }}>
-                {task.assigned_user ? (
-                  <span>
-                    <strong>Assigned to:</strong> {task.assigned_user.display_name}
-                  </span>
-                ) : (
-                  <span className="text-muted">Unassigned</span>
-                )}
-                {task.due_date && (
-                  <span style={{ marginLeft: "1rem" }}>
-                    <strong>Due:</strong> {new Date(task.due_date).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="admin-card-actions">
-              {task.status !== "completed" && (
-                <>
-                  {task.status === "pending" && (
-                    <button
-                      className="primary-btn"
-                      onClick={() => handleUpdateStatus(task.id, "in_progress")}
-                    >
-                      Start
-                    </button>
-                  )}
-                  {task.status === "in_progress" && (
-                    <button
-                      className="primary-btn"
-                      onClick={() => handleUpdateStatus(task.id, "completed")}
-                    >
-                      Complete
-                    </button>
-                  )}
-                </>
-              )}
-              {isAdmin && (
-                <button
-                  className="secondary-btn"
-                  onClick={() => handleDeleteTask(task.id)}
-                >
-                  Delete
-                </button>
-              )}
-            </div>
+      <div className="kanban-card-footer">
+        {task.profiles && (
+          <div className="kanban-assignee">
+            <span className="kanban-avatar">
+              {task.profiles.full_name?.[0]?.toUpperCase() || "?"}
+            </span>
+            <span className="kanban-assignee-name">{task.profiles.full_name}</span>
           </div>
-        ))}
-        {tasks.length === 0 && (
-          <div className="text-muted">No tasks yet. Create one above!</div>
         )}
+        {task.due_date && (
+          <div className="kanban-due-date">
+            📅 {new Date(task.due_date).toLocaleDateString()}
+          </div>
+        )}
+      </div>
+
+      <div className="kanban-card-move">
+        {task.status === "pending" && (
+          <button
+            className="kanban-move-btn"
+            onClick={() => handleUpdateStatus(task.id, "in_progress")}
+          >
+            Start →
+          </button>
+        )}
+        {task.status === "in_progress" && (
+          <>
+            <button
+              className="kanban-move-btn secondary"
+              onClick={() => handleUpdateStatus(task.id, "pending")}
+            >
+              ← Back
+            </button>
+            <button
+              className="kanban-move-btn"
+              onClick={() => handleUpdateStatus(task.id, "completed")}
+            >
+              Complete →
+            </button>
+          </>
+        )}
+        {task.status === "completed" && (
+          <button
+            className="kanban-move-btn secondary"
+            onClick={() => handleUpdateStatus(task.id, "in_progress")}
+          >
+            ← Reopen
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="team-manager">
+      <div className="team-manager-header">
+        <h2 className="team-manager-title">Team Board</h2>
+        <button
+          className="kanban-add-btn"
+          onClick={() => setShowForm(!showForm)}
+        >
+          {showForm ? "✕ Cancel" : "+ New Task"}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="kanban-form-overlay" onClick={cancelForm}>
+          <div className="kanban-form-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="kanban-form-title">
+              {editingTask ? "Edit Task" : "Create New Task"}
+            </h3>
+            <form onSubmit={handleCreateTask}>
+              <div className="kanban-form-field">
+                <label className="kanban-form-label">Task Title *</label>
+                <input
+                  className="kanban-form-input"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="Edit episode 12"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="kanban-form-field">
+                <label className="kanban-form-label">Description</label>
+                <textarea
+                  className="kanban-form-textarea"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder="Add more details..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="kanban-form-row">
+                <div className="kanban-form-field">
+                  <label className="kanban-form-label">Assign To</label>
+                  <select
+                    className="kanban-form-select"
+                    value={form.assigned_to}
+                    onChange={(e) => setForm({ ...form, assigned_to: e.target.value })}
+                  >
+                    <option value="">Unassigned</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.full_name} ({user.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="kanban-form-field">
+                  <label className="kanban-form-label">Due Date</label>
+                  <input
+                    className="kanban-form-input"
+                    type="date"
+                    value={form.due_date}
+                    onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="kanban-form-actions">
+                <button type="button" className="kanban-form-cancel" onClick={cancelForm}>
+                  Cancel
+                </button>
+                <button type="submit" className="kanban-form-submit">
+                  {editingTask ? "Update Task" : "Create Task"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="kanban-board">
+        <div className="kanban-column">
+          <div className="kanban-column-header">
+            <h3 className="kanban-column-title">
+              <span className="kanban-status-dot pending"></span>
+              To Do
+            </h3>
+            <span className="kanban-count">{groupedTasks.pending.length}</span>
+          </div>
+          <div className="kanban-column-content">
+            {groupedTasks.pending.map(renderTask)}
+            {groupedTasks.pending.length === 0 && (
+              <div className="kanban-empty">No tasks yet</div>
+            )}
+          </div>
+        </div>
+
+        <div className="kanban-column">
+          <div className="kanban-column-header">
+            <h3 className="kanban-column-title">
+              <span className="kanban-status-dot in-progress"></span>
+              In Progress
+            </h3>
+            <span className="kanban-count">{groupedTasks.in_progress.length}</span>
+          </div>
+          <div className="kanban-column-content">
+            {groupedTasks.in_progress.map(renderTask)}
+            {groupedTasks.in_progress.length === 0 && (
+              <div className="kanban-empty">No tasks in progress</div>
+            )}
+          </div>
+        </div>
+
+        <div className="kanban-column">
+          <div className="kanban-column-header">
+            <h3 className="kanban-column-title">
+              <span className="kanban-status-dot completed"></span>
+              Completed
+            </h3>
+            <span className="kanban-count">{groupedTasks.completed.length}</span>
+          </div>
+          <div className="kanban-column-content">
+            {groupedTasks.completed.map(renderTask)}
+            {groupedTasks.completed.length === 0 && (
+              <div className="kanban-empty">No completed tasks</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
