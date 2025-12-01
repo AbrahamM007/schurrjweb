@@ -1,434 +1,210 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "../services/supabaseClient";
-import ScriptManager from "../components/ScriptManager";
-import TeamManager from "../components/TeamManager";
-import ChroniclesManager from "../components/ChroniclesManager";
-import AIAnalyticsDashboard from "../components/AIAnalyticsDashboard";
-import { useAuth } from "../hooks/useAuth";
+import React, { useState, useEffect } from 'react';
+import AdminSidebar from '../components/admin/AdminSidebar';
+import StatCard from '../components/admin/StatCard';
+import AITextTool from '../components/admin/AITextTool';
+import { FileText, Image, BookOpen, TrendingUp, Upload, Trash2, Edit } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { db } from '../lib/firebase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 
-const tabs = ["submissions", "gallery", "chronicles", "weekly", "scripts", "team", "analytics"];
+const Admin = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
 
-export default function Admin() {
-  const navigate = useNavigate();
-  const { isAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState("submissions");
-  const [submissions, setSubmissions] = useState([]);
-  const [gallery, setGallery] = useState([]);
-  const [opinions, setOpinions] = useState([]);
-  const [weekly, setWeekly] = useState([]);
-  const [weeklyForm, setWeeklyForm] = useState({ youtubeId: "" });
-  const [galleryForm, setGalleryForm] = useState({
-    title: "",
-    credit: "",
-    imageUrl: ""
-  });
-  const [opinionForm, setOpinionForm] = useState({
-    text: "",
-    author: ""
-  });
-  const [lightMode, setLightMode] = useState(false);
-
-  useEffect(() => {
-    if (lightMode) {
-      document.body.setAttribute('data-light-mode', 'true');
-    } else {
-      document.body.removeAttribute('data-light-mode');
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <DashboardView />;
+      case 'articles':
+        return <ArticlesView />;
+      case 'chronicles':
+        return <ChroniclesView />;
+      case 'gallery':
+        return <GalleryView />;
+      case 'ai-copilot':
+        return <AICopilotView />;
+      default:
+        return <DashboardView />;
     }
-    return () => {
-      document.body.removeAttribute('data-light-mode');
-    };
-  }, [lightMode]);
-
-  useEffect(() => {
-    fetchSubmissions();
-    fetchGallery();
-    fetchOpinions();
-    fetchWeekly();
-
-    const submissionsChannel = supabase
-      .channel('submissions_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, () => {
-        fetchSubmissions();
-      })
-      .subscribe();
-
-    const galleryChannel = supabase
-      .channel('gallery_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'gallery_items' }, () => {
-        fetchGallery();
-      })
-      .subscribe();
-
-    const opinionsChannel = supabase
-      .channel('opinions_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'opinions' }, () => {
-        fetchOpinions();
-      })
-      .subscribe();
-
-    const weeklyChannel = supabase
-      .channel('weekly_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'weekly_videos' }, () => {
-        fetchWeekly();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(submissionsChannel);
-      supabase.removeChannel(galleryChannel);
-      supabase.removeChannel(opinionsChannel);
-      supabase.removeChannel(weeklyChannel);
-    };
-  }, []);
-
-  const fetchSubmissions = async () => {
-    const { data } = await supabase
-      .from('submissions')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (data) setSubmissions(data);
-  };
-
-  const fetchGallery = async () => {
-    const { data } = await supabase
-      .from('gallery_items')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (data) setGallery(data);
-  };
-
-  const fetchOpinions = async () => {
-    const { data } = await supabase
-      .from('opinions')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (data) setOpinions(data);
-  };
-
-  const fetchWeekly = async () => {
-    const { data } = await supabase
-      .from('weekly_videos')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (data) setWeekly(data);
-  };
-
-  const approveSubmissionToCollection = async (sub) => {
-    if (sub.category === "gallery") {
-      await supabase.from('gallery_items').insert({
-        title: sub.title || sub.suggested_headline || "Untitled",
-        credit: sub.name || sub.email,
-        image_url: sub.image_url || ""
-      });
-    } else {
-      await supabase.from('opinions').insert({
-        text: sub.body,
-        author: sub.name || "Student"
-      });
-    }
-    await supabase.from('submissions').update({ status: "approved" }).eq('id', sub.id);
-  };
-
-  const deleteSubmission = async (id) => {
-    await supabase.from('submissions').delete().eq('id', id);
-  };
-
-  const createGallery = async (e) => {
-    e.preventDefault();
-    await supabase.from('gallery_items').insert({
-      title: galleryForm.title,
-      credit: galleryForm.credit,
-      image_url: galleryForm.imageUrl
-    });
-    setGalleryForm({ title: "", credit: "", imageUrl: "" });
-  };
-
-  const createOpinion = async (e) => {
-    e.preventDefault();
-    await supabase.from('opinions').insert({
-      text: opinionForm.text,
-      author: opinionForm.author
-    });
-    setOpinionForm({ text: "", author: "" });
-  };
-
-  const saveWeekly = async (e) => {
-    e.preventDefault();
-    await supabase.from('weekly_videos').insert({
-      youtube_id: weeklyForm.youtubeId
-    });
-    setWeeklyForm({ youtubeId: "" });
   };
 
   return (
-    <section className="panel-shell" style={lightMode ? {
-      background: "#f5f5f5",
-      color: "#1a1a1a"
-    } : {}}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
-        <div>
-          <h1 className="panel-title">Admin dashboard</h1>
-          <p className="text-muted" style={{ marginBottom: "1.2rem" }}>
-            Manage content, create video scripts with AI, and assign team tasks.
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          <button
-            onClick={() => navigate("/")}
-            style={{
-              padding: "0.6rem 1.2rem",
-              background: "transparent",
-              color: lightMode ? "#1a1a1a" : "#fff",
-              border: "2px solid",
-              borderColor: lightMode ? "#1a1a1a" : "#96c7bf",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: 700,
-              fontSize: "0.9rem",
-              transition: "all 0.3s ease"
-            }}
-          >
-            ← Home
-          </button>
-          <button
-            onClick={() => setLightMode(!lightMode)}
-            style={{
-              padding: "0.6rem 1.2rem",
-              background: lightMode ? "#1a1a1a" : "#f5f5f5",
-              color: lightMode ? "#f5f5f5" : "#1a1a1a",
-              border: "2px solid",
-              borderColor: lightMode ? "#1a1a1a" : "#f5f5f5",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: 700,
-              fontSize: "0.9rem",
-              transition: "all 0.3s ease"
-            }}
-          >
-            {lightMode ? "🌙 Dark Mode" : "☀️ Light Mode"}
-          </button>
-        </div>
-      </div>
-      <div className="admin-tabs">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            className={
-              "admin-tab" + (tab === activeTab ? " active" : "")
-            }
-            onClick={() => setActiveTab(tab)}
-            style={lightMode ? {
-              background: tab === activeTab ? "#1a1a1a" : "transparent",
-              color: tab === activeTab ? "#f5f5f5" : "#1a1a1a",
-              borderColor: "#1a1a1a"
-            } : {}}
-          >
-            {tab}
-          </button>
-        ))}
+    <div className="flex min-h-screen bg-schurr-white">
+      <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+
+      <main className="flex-1 p-8">
+        {renderContent()}
+      </main>
+    </div>
+  );
+};
+
+const DashboardView = () => {
+  return (
+    <div>
+      <h1 className="text-5xl font-black uppercase tracking-tighter mb-8">Dashboard</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <StatCard title="Published Articles" value="47" change={12} icon={FileText} />
+        <StatCard title="Gallery Photos" value="234" change={8} icon={Image} />
+        <StatCard title="Chronicle Issues" value="12" change={0} icon={BookOpen} />
+        <StatCard title="Monthly Views" value="8.2K" change={23} icon={TrendingUp} />
       </div>
 
-      {activeTab === "submissions" && (
-        <div className="submission-list">
-          {submissions.map((sub) => (
-            <div key={sub.id} className="submission-item">
-              <div className="submission-meta">
-                {sub.category?.toUpperCase()} • {sub.name} •{" "}
-                {sub.email}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white border-3 border-schurr-black p-6 shadow-brutal">
+          <h2 className="text-2xl font-black uppercase mb-4">Recent Activity</h2>
+          <div className="space-y-3">
+            {[
+              { action: 'Published', item: 'Student Council Interview', time: '2 hours ago' },
+              { action: 'Uploaded', item: '12 new gallery photos', time: '5 hours ago' },
+              { action: 'Updated', item: 'Winter Chronicle Edition', time: '1 day ago' },
+            ].map((activity, i) => (
+              <div key={i} className="flex justify-between items-center py-2 border-b border-gray-200">
+                <div>
+                  <span className="font-bold">{activity.action}</span> {activity.item}
+                </div>
+                <span className="text-sm text-gray-500 font-mono">{activity.time}</span>
               </div>
-              <div style={{ marginTop: "0.4rem", fontWeight: 600 }}>
-                {sub.title || sub.suggested_headline || "(no headline)"}
-              </div>
-              <div className="text-muted" style={{ marginTop: "0.3rem" }}>
-                {sub.body?.slice(0, 200)}...
-              </div>
-              <div className="admin-card-actions" style={{ marginTop: "0.5rem" }}>
-                <button
-                  className="secondary-btn"
-                  onClick={() => approveSubmissionToCollection(sub)}
-                >
-                  Approve & publish
-                </button>
-                <button
-                  className="secondary-btn"
-                  onClick={() => deleteSubmission(sub.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-          {!submissions.length && (
-            <div className="text-muted">No submissions yet.</div>
-          )}
+            ))}
+          </div>
         </div>
-      )}
 
-      {activeTab === "gallery" && (
-        <>
-          <form onSubmit={createGallery}>
-            <div className="form-grid">
-              <div>
-                <div className="field-label">Title</div>
-                <input
-                  className="field-input"
-                  value={galleryForm.title}
-                  onChange={(e) =>
-                    setGalleryForm({ ...galleryForm, title: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <div className="field-label">Credit</div>
-                <input
-                  className="field-input"
-                  value={galleryForm.credit}
-                  onChange={(e) =>
-                    setGalleryForm({ ...galleryForm, credit: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <div className="field-label">Image URL</div>
-                <input
-                  className="field-input"
-                  value={galleryForm.imageUrl}
-                  onChange={(e) =>
-                    setGalleryForm({ ...galleryForm, imageUrl: e.target.value })
-                  }
-                  placeholder="https://"
-                  required
-                />
-              </div>
-            </div>
-            <button className="primary-btn" style={{ marginTop: "1.4rem" }}>
-              Add gallery image
-            </button>
-          </form>
+        <div className="bg-schurr-black text-white border-3 border-schurr-black p-6">
+          <h2 className="text-2xl font-black uppercase mb-4">Quick Actions</h2>
+          <div className="space-y-3">
+            <Button variant="secondary" className="w-full justify-start">
+              <FileText className="mr-2" size={20} /> New Article
+            </Button>
+            <Button variant="secondary" className="w-full justify-start">
+              <Upload className="mr-2" size={20} /> Upload Photos
+            </Button>
+            <Button variant="secondary" className="w-full justify-start">
+              <BookOpen className="mr-2" size={20} /> Add Chronicle Issue
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-          <div className="submission-list">
-            {gallery.map((g) => (
-              <div key={g.id} className="admin-card">
-                <div className="admin-card-main">
-                  <div style={{ fontWeight: 600 }}>{g.title}</div>
-                  <div className="text-muted">
-                    {g.credit} • {g.image_url?.slice(0, 50)}
+const ArticlesView = () => {
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const q = query(collection(db, "articles"), orderBy("date", "desc"));
+        const querySnapshot = await getDocs(q);
+        const fetchedArticles = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setArticles(fetchedArticles);
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticles();
+  }, []);
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-5xl font-black uppercase tracking-tighter">Articles</h1>
+        <Button>+ New Article</Button>
+      </div>
+
+      <div className="space-y-4">
+        {loading ? (
+          <div className="text-gray-500 text-center py-10">Loading articles...</div>
+        ) : articles.length > 0 ? (
+          articles.map((article) => (
+            <div key={article.id} className="bg-white border-3 border-schurr-black p-6 flex justify-between items-center shadow-brutal hover:shadow-brutal-lg transition-all">
+              <div className="flex gap-6 items-center flex-1">
+                {article.image && (
+                  <img src={article.image} alt={article.title} className="w-24 h-24 object-cover border-2 border-schurr-black" />
+                )}
+                <div>
+                  <h3 className="text-xl font-bold mb-1">{article.title}</h3>
+                  <div className="flex gap-4 text-sm text-gray-600 font-mono">
+                    <span>{article.category}</span>
+                    <span>•</span>
+                    <span>{article.date}</span>
                   </div>
                 </div>
-                <div className="admin-card-actions">
-                  <button
-                    className="secondary-btn"
-                    onClick={() => supabase.from('gallery_items').delete().eq('id', g.id).then(fetchGallery)}
-                  >
-                    Delete
-                  </button>
-                </div>
               </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {activeTab === "opinions" && (
-        <>
-          <form onSubmit={createOpinion}>
-            <div className="form-grid">
-              <div>
-                <div className="field-label">Opinion text</div>
-                <textarea
-                  className="field-textarea"
-                  value={opinionForm.text}
-                  onChange={(e) =>
-                    setOpinionForm({ ...opinionForm, text: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <div className="field-label">Author</div>
-                <input
-                  className="field-input"
-                  value={opinionForm.author}
-                  onChange={(e) =>
-                    setOpinionForm({ ...opinionForm, author: e.target.value })
-                  }
-                  placeholder="John Doe"
-                  required
-                />
+              <div className="flex gap-2">
+                <button className="p-2 hover:bg-gray-100 transition-colors">
+                  <Edit size={20} />
+                </button>
+                <button className="p-2 hover:bg-red-50 text-red-600 transition-colors">
+                  <Trash2 size={20} />
+                </button>
               </div>
             </div>
-            <button className="primary-btn" style={{ marginTop: "1.4rem" }}>
-              Add opinion
-            </button>
-          </form>
-
-          <div className="submission-list">
-            {opinions.map((op) => (
-              <div key={op.id} className="admin-card">
-                <div className="admin-card-main">
-                  <div>{op.text}</div>
-                  <div className="text-muted">{op.author}</div>
-                </div>
-                <div className="admin-card-actions">
-                  <button
-                    className="secondary-btn"
-                    onClick={() => supabase.from('opinions').delete().eq('id', op.id).then(fetchOpinions)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+          ))
+        ) : (
+          <div className="text-gray-500 text-center py-10 border-2 border-dashed border-gray-300 rounded-lg">
+            No articles found. Create one to get started.
           </div>
-        </>
-      )}
-
-      {activeTab === "weekly" && (
-        <>
-          <form onSubmit={saveWeekly}>
-            <div style={{ maxWidth: 420 }}>
-              <div className="field-label">YouTube video ID</div>
-              <input
-                className="field-input"
-                value={weeklyForm.youtubeId}
-                onChange={(e) =>
-                  setWeeklyForm({ youtubeId: e.target.value })
-                }
-                placeholder="Example: dQw4w9WgXcQ"
-                required
-              />
-              <button className="primary-btn" style={{ marginTop: "1.2rem" }}>
-                Save as latest Spartan Weekly
-              </button>
-            </div>
-          </form>
-          <div className="submission-list">
-            {weekly.map((v) => (
-              <div key={v.id} className="admin-card">
-                <div className="admin-card-main">
-                  <div style={{ fontWeight: 600 }}>{v.youtube_id}</div>
-                  <div className="text-muted">{v.id}</div>
-                </div>
-                <div className="admin-card-actions">
-                  <button
-                    className="secondary-btn"
-                    onClick={() => supabase.from('weekly_videos').delete().eq('id', v.id).then(fetchWeekly)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {activeTab === "scripts" && isAdmin && <ScriptManager />}
-      {activeTab === "team" && <TeamManager />}
-      {activeTab === "chronicles" && <ChroniclesManager />}
-      {activeTab === "analytics" && <AIAnalyticsDashboard />}
-    </section>
+        )}
+      </div>
+    </div>
   );
-}
+};
+
+const ChroniclesView = () => {
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-5xl font-black uppercase tracking-tighter">Chronicles</h1>
+        <Button>+ Upload Issue</Button>
+      </div>
+
+      <div className="bg-white border-3 border-schurr-black p-8 shadow-brutal">
+        <div className="border-4 border-dashed border-gray-300 rounded-lg p-12 text-center">
+          <Upload size={48} className="mx-auto mb-4 text-gray-400" />
+          <h3 className="text-xl font-bold mb-2">Upload PDF Chronicle</h3>
+          <p className="text-gray-600 mb-4">Drag and drop or click to browse</p>
+          <Button variant="outline">Choose File</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const GalleryView = () => {
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-5xl font-black uppercase tracking-tighter">Gallery Manager</h1>
+        <Button>+ Upload Photos</Button>
+      </div>
+
+      <div className="bg-white border-3 border-schurr-black p-8 shadow-brutal">
+        <div className="border-4 border-dashed border-gray-300 rounded-lg p-12 text-center">
+          <Image size={48} className="mx-auto mb-4 text-gray-400" />
+          <h3 className="text-xl font-bold mb-2">Upload Photos</h3>
+          <p className="text-gray-600 mb-4">AI will auto-tag your images</p>
+          <Button variant="outline">Choose Files</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AICopilotView = () => {
+  return (
+    <div>
+      <h1 className="text-5xl font-black uppercase tracking-tighter mb-8">AI Co-Pilot</h1>
+      <AITextTool />
+    </div>
+  );
+};
+
+export default Admin;

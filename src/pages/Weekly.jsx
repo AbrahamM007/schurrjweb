@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../services/supabaseClient";
-import "../styles/weekly.css";
 import weeklyImage from "../assets/images/weekly.png";
 
 export default function Weekly() {
@@ -44,7 +43,7 @@ export default function Weekly() {
           setLatest({ id: videoId, youtube_id: videoId });
           return;
         }
-      } catch {}
+      } catch { }
     }
 
     const { data } = await supabase
