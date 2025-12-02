@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Button } from '../components/ui/Button';
 import { Loader2, ShieldCheck, Lock, KeyRound } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,7 +29,17 @@ const Login = () => {
         if (securityCode !== 'schurrjweb') {
           throw new Error('Invalid Security Code. Access Denied.');
         }
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Sync to Firestore 'members' collection
+        await addDoc(collection(db, "members"), {
+          uid: user.uid,
+          name: email.split('@')[0], // Use part of email as name initially
+          email: email,
+          role: 'Admin',
+          createdAt: serverTimestamp()
+        });
       }
       navigate('/admin');
     } catch (err) {

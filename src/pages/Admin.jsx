@@ -178,23 +178,7 @@ const DashboardView = ({ setActiveTab }) => {
             </Button>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-white/10">
-            <h3 className="text-sm font-bold uppercase text-white/60 mb-4">System Status</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-white/40">Database</span>
-                <span className="text-schurr-green">Connected</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-white/40">AI Service</span>
-                <span className="text-schurr-green">Active</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-white/40">Storage</span>
-                <span className="text-white/80">45% Used</span>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </motion.div>

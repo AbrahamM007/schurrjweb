@@ -73,10 +73,10 @@ const Navbar = () => {
                         <div className="flex items-center gap-4">
                             <Link
                                 to="/admin"
-                                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-schurr-green/20 text-schurr-green border border-schurr-green/30 hover:bg-schurr-green hover:text-white transition-all duration-300 text-sm font-medium backdrop-blur-sm"
+                                className="hidden md:flex items-center gap-2 px-5 py-2.5 rounded-full bg-schurr-green text-white hover:bg-schurr-darkGreen transition-all duration-300 text-sm font-bold shadow-lg shadow-schurr-green/20 hover:shadow-schurr-green/40 hover:-translate-y-0.5"
                             >
-                                <div className="w-2 h-2 rounded-full bg-schurr-green animate-pulse" />
-                                Admin
+                                <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                                Admin Portal
                             </Link>
 
                             <button

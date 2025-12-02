@@ -1,74 +1,153 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { cn } from '../lib/utils';
+import { db } from '../lib/firebase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { BookOpen, Calendar, ArrowRight, Loader2 } from 'lucide-react';
 
 const Chronicles = () => {
-  const [selectedYear, setSelectedYear] = useState('2025');
-  const years = ['2025', '2024', '2023', '2022'];
+  const [issues, setIssues] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedYear, setSelectedYear] = useState('All');
+  const [years, setYears] = useState(['All']);
 
-  const issues = [
-    { id: 1, title: "Winter Edition", date: "Dec 2025", cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=1974&auto=format&fit=crop" },
-    { id: 2, title: "Fall Edition", date: "Oct 2025", cover: "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1974&auto=format&fit=crop" },
-    { id: 3, title: "Back to School", date: "Aug 2025", cover: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=2022&auto=format&fit=crop" },
-  ];
+  useEffect(() => {
+    const fetchIssues = async () => {
+      try {
+        const q = query(collection(db, "chronicles"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        const fetchedIssues = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          // Convert Firestore timestamp to Date object if it exists, else use current date
+          dateObj: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000) : new Date()
+        }));
+
+        setIssues(fetchedIssues);
+
+        // Extract unique years
+        const uniqueYears = ['All', ...new Set(fetchedIssues.map(issue => issue.dateObj.getFullYear().toString()))];
+        setYears(uniqueYears);
+      } catch (error) {
+        console.error("Error fetching chronicles:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIssues();
+  }, []);
+
+  const filteredIssues = selectedYear === 'All'
+    ? issues
+    : issues.filter(issue => issue.dateObj.getFullYear().toString() === selectedYear);
 
   return (
-    <div className="min-h-screen bg-schurr-white py-12">
+    <div className="min-h-screen bg-schurr-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-16">
-          <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-8">
-            The<br /><span className="text-schurr-green">Chronicles</span>
-          </h1>
-          <p className="text-xl font-serif max-w-2xl text-gray-600">
-            Archive of Schurr High School's print journalism. Documenting history, one issue at a time.
-          </p>
+        {/* Header */}
+        <div className="mb-20 text-center">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-7xl md:text-9xl font-black uppercase tracking-tighter mb-6 leading-none"
+          >
+            The <span className="text-transparent bg-clip-text bg-gradient-to-r from-schurr-green to-schurr-darkGreen">Archive</span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-xl md:text-2xl font-serif text-gray-500 max-w-3xl mx-auto"
+          >
+            Documenting the history of Schurr High School. Every story, every voice, preserved for eternity.
+          </motion.p>
         </div>
 
-        {/* Year Selector */}
-        <div className="flex flex-wrap gap-4 mb-12 border-b-3 border-schurr-black pb-8">
-          {years.map((year) => (
-            <button
-              key={year}
-              onClick={() => setSelectedYear(year)}
-              className={cn(
-                "text-4xl font-black uppercase tracking-tighter transition-colors hover:text-schurr-green",
-                selectedYear === year ? "text-schurr-black underline decoration-4 underline-offset-8" : "text-gray-300"
-              )}
-            >
-              {year}
-            </button>
-          ))}
-        </div>
+        {/* Year Filter */}
+        {years.length > 1 && (
+          <div className="flex justify-center flex-wrap gap-4 mb-16">
+            {years.map((year) => (
+              <button
+                key={year}
+                onClick={() => setSelectedYear(year)}
+                className={cn(
+                  "px-6 py-2 rounded-full text-sm font-bold uppercase tracking-widest transition-all border",
+                  selectedYear === year
+                    ? "bg-schurr-black text-white border-schurr-black"
+                    : "bg-white text-gray-400 border-gray-200 hover:border-schurr-black hover:text-schurr-black"
+                )}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {/* Issues Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {issues.map((issue) => (
-            <motion.div
-              key={issue.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="group"
-            >
-              <div className="relative aspect-[3/4] bg-gray-200 border-3 border-schurr-black mb-6 overflow-hidden shadow-brutal group-hover:shadow-brutal-xl transition-all duration-300 group-hover:-translate-y-2">
-                <img
-                  src={issue.cover}
-                  alt={issue.title}
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 p-6">
-                  <Button variant="primary" className="w-full">Read Online</Button>
-                  <Button variant="secondary" className="w-full">Download PDF</Button>
+        {/* Grid */}
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin text-schurr-green" size={48} />
+          </div>
+        ) : filteredIssues.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            {filteredIssues.map((issue, index) => (
+              <motion.div
+                key={issue.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="group perspective-1000"
+              >
+                <div className="relative bg-white border border-gray-100 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-500 transform group-hover:-translate-y-2 group-hover:rotate-1">
+                  {/* Decorative Elements */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-schurr-green/5 rounded-bl-full -z-0" />
+
+                  <div className="relative z-10">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="w-12 h-12 bg-schurr-black text-white rounded-xl flex items-center justify-center font-black text-xl">
+                        {issue.title.charAt(0)}
+                      </div>
+                      <span className="px-3 py-1 bg-gray-100 rounded-full text-xs font-mono font-bold text-gray-500 uppercase">
+                        {issue.type === 'rich-text' ? 'Digital' : 'PDF'}
+                      </span>
+                    </div>
+
+                    <h3 className="text-3xl font-black uppercase tracking-tight mb-2 leading-none group-hover:text-schurr-green transition-colors">
+                      {issue.title}
+                    </h3>
+
+                    <div className="flex items-center gap-2 text-gray-400 font-mono text-sm mb-6">
+                      <Calendar size={14} />
+                      {issue.dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </div>
+
+                    <div className="h-32 overflow-hidden relative mb-6">
+                      <p className="text-gray-500 font-serif leading-relaxed line-clamp-4">
+                        {issue.preview || "No preview available for this issue."}
+                      </p>
+                      <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent" />
+                    </div>
+
+                    <Button className="w-full bg-schurr-black text-white hover:bg-schurr-green border-0 group-hover:shadow-lg group-hover:shadow-schurr-green/20 transition-all">
+                      Read Issue <ArrowRight size={16} className="ml-2" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between items-baseline border-b-2 border-gray-200 pb-2">
-                <h3 className="text-2xl font-bold uppercase tracking-tight">{issue.title}</h3>
-                <span className="font-mono text-sm text-gray-500">{issue.date}</span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <BookOpen size={32} className="text-gray-300" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">The Archives are Empty</h3>
+            <p className="text-gray-500">No chronicles have been published yet.</p>
+          </div>
+        )}
       </div>
     </div>
   );
