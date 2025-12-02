@@ -244,10 +244,10 @@ const TeamBoard = () => {
             </div>
 
             {/* Board Area */}
-            <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4">
-                <div className="flex gap-6 h-full min-w-max">
+            <div className="flex-1 overflow-y-auto md:overflow-x-auto md:overflow-y-hidden pb-4 custom-scrollbar">
+                <div className="flex flex-col md:flex-row gap-6 h-full md:min-w-max">
                     {COLUMNS.map(column => (
-                        <div key={column.id} className="w-80 flex flex-col bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                        <div key={column.id} className="w-full md:w-80 flex flex-col bg-white/5 border border-white/10 rounded-xl overflow-hidden shrink-0">
                             {/* Column Header */}
                             <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
                                 <div className="flex items-center gap-2">
