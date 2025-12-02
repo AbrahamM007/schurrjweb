@@ -1,11 +1,12 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Image, BookOpen, Sparkles, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { LayoutDashboard, FileText, Image, BookOpen, Sparkles, Settings, LogOut, Users } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const AdminSidebar = ({ activeTab, setActiveTab }) => {
     const tabs = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'team', label: 'Team', icon: Users },
         { id: 'articles', label: 'Articles', icon: FileText },
         { id: 'chronicles', label: 'Chronicles', icon: BookOpen },
         { id: 'gallery', label: 'Gallery', icon: Image },
@@ -14,37 +15,55 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
     ];
 
     return (
-        <aside className="w-64 bg-schurr-black text-schurr-white border-r-3 border-schurr-black min-h-screen sticky top-0">
-            <div className="p-6 border-b-3 border-gray-800">
-                <h2 className="text-2xl font-black uppercase tracking-tighter">
-                    Admin<br />Panel
-                </h2>
+        <aside className="fixed left-0 top-0 bottom-0 w-20 md:w-64 bg-schurr-black/95 backdrop-blur-xl border-r border-white/10 z-40 transition-all duration-300 flex flex-col">
+            <div className="p-6 border-b border-white/10 flex items-center justify-center md:justify-start gap-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-schurr-green to-schurr-darkGreen rounded-lg flex items-center justify-center shadow-lg shadow-schurr-green/20">
+                    <span className="font-serif italic font-bold text-white">S</span>
+                </div>
+                <div className="hidden md:block">
+                    <h2 className="text-lg font-bold uppercase tracking-tight text-white leading-none">
+                        Admin
+                    </h2>
+                    <span className="text-xs text-white/40 font-mono">Panel</span>
+                </div>
             </div>
 
-            <nav className="p-4">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
                     return (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={cn(
-                                "w-full flex items-center gap-3 px-4 py-3 mb-2 font-bold uppercase text-sm tracking-wider transition-all",
-                                activeTab === tab.id
-                                    ? "bg-schurr-green text-white"
-                                    : "text-gray-400 hover:bg-gray-900 hover:text-white"
+                                "w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden",
+                                isActive
+                                    ? "bg-schurr-green/10 text-schurr-green"
+                                    : "text-white/60 hover:text-white hover:bg-white/5"
                             )}
                         >
-                            <Icon size={20} />
-                            {tab.label}
+                            {isActive && (
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-schurr-green rounded-r-full" />
+                            )}
+                            <Icon size={20} className={cn("transition-transform group-hover:scale-110", isActive && "text-schurr-green")} />
+                            <span className="hidden md:block text-sm tracking-wide">{tab.label}</span>
+
+                            {isActive && (
+                                <div className="absolute inset-0 bg-gradient-to-r from-schurr-green/10 to-transparent opacity-50" />
+                            )}
                         </button>
                     );
                 })}
             </nav>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6 border-t-3 border-gray-800">
-                <Link to="/" className="text-sm text-gray-500 hover:text-schurr-green transition-colors">
-                    ← Back to Site
+            <div className="p-4 border-t border-white/10">
+                <Link
+                    to="/"
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-all duration-300 group"
+                >
+                    <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+                    <span className="hidden md:block text-sm font-medium">Back to Site</span>
                 </Link>
             </div>
         </aside>

@@ -1,0 +1,17 @@
+[
+    {
+        "origin": [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "https://sjw-web-7fbb0.web.app"
+        ],
+        "method": [
+            "GET",
+            "PUT",
+            "POST",
+            "DELETE",
+            "HEAD"
+        ],
+        "maxAgeSeconds": 3600
+    }
+]

@@ -1,134 +1,153 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "../services/supabaseClient";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../lib/firebase';
+import { Button } from '../components/ui/Button';
+import { Loader2, ShieldCheck, Lock, KeyRound } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [displayName, setDisplayName] = useState("");
-  const [busy, setBusy] = useState(false);
+const Login = () => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [securityCode, setSecurityCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setBusy(true);
+    setLoading(true);
+    setError('');
+
     try {
-      if (isSignUp) {
-        const role = adminPassword === "schurrjw" ? "admin" : "writer";
-
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: displayName || email.split('@')[0],
-              role: role
-            }
-          }
-        });
-
-        if (signUpError) throw signUpError;
-
-        navigate("/admin");
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-
-        navigate("/admin");
+        // Registration Logic
+        if (securityCode !== 'schurrjweb') {
+          throw new Error('Invalid Security Code. Access Denied.');
+        }
+        await createUserWithEmailAndPassword(auth, email, password);
       }
+      navigate('/admin');
     } catch (err) {
       console.error("Auth error:", err);
-      let errorMsg = isSignUp ? "Sign up failed. " : "Login failed. ";
-
-      if (err.message?.includes('already registered')) {
-        errorMsg += "This email is already registered. Try logging in instead.";
-      } else if (err.message?.includes('Password')) {
-        errorMsg += "Password should be at least 6 characters.";
-      } else if (err.message?.includes('Invalid')) {
-        errorMsg += "Invalid email or password.";
-      } else {
-        errorMsg += err.message || "Please try again.";
-      }
-
-      alert(errorMsg);
+      setError(err.message.replace('Firebase: ', ''));
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="login-shell">
-      <div className="login-box">
-        <div className="login-title">{isSignUp ? "Create Account" : "Admin Login"}</div>
-        <p className="login-summary">
-          {isSignUp
-            ? "Create a staff account. Enter admin password to get admin access."
-            : "Sign in with your staff account to manage content."}
-        </p>
-        <form onSubmit={handleSubmit}>
-          {isSignUp && (
-            <div style={{ marginBottom: "0.9rem" }}>
-              <div className="field-label">Display Name</div>
-              <input
-                className="field-input"
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your name"
-              />
-            </div>
-          )}
-          <div style={{ marginBottom: "0.9rem" }}>
-            <div className="field-label">Email</div>
-            <input
-              className="field-input"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div style={{ marginBottom: "0.9rem" }}>
-            <div className="field-label">Password</div>
-            <input
-              className="field-input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          {isSignUp && (
-            <div style={{ marginBottom: "0.9rem" }}>
-              <div className="field-label">Admin Password (optional)</div>
-              <input
-                className="field-input"
-                type="password"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                placeholder="Leave blank for regular user"
-              />
-            </div>
-          )}
-          <button className="primary-btn" disabled={busy} style={{ marginBottom: "0.8rem" }}>
-            {busy ? (isSignUp ? "Creating account..." : "Signing in...") : (isSignUp ? "Create account" : "Sign in")}
-          </button>
-          <button
-            type="button"
-            className="secondary-btn"
-            onClick={() => setIsSignUp(!isSignUp)}
-            style={{ width: "100%" }}
-          >
-            {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
-          </button>
-        </form>
+    <div className="min-h-screen bg-schurr-black flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-schurr-green/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-900/10 rounded-full blur-[120px]" />
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-schurr-green to-schurr-darkGreen rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-schurr-green/20">
+              <ShieldCheck size={32} className="text-white" />
+            </div>
+            <h1 className="text-2xl font-black uppercase tracking-tight text-white">
+              {isLogin ? 'Admin Access' : 'Admin Registration'}
+            </h1>
+            <p className="text-white/40 font-mono text-sm mt-2">Schurr Journalism Web Portal</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm text-center font-bold">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-white/60 mb-2">Email Command</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white focus:outline-none focus:border-schurr-green focus:ring-1 focus:ring-schurr-green transition-all placeholder:text-white/20"
+                placeholder="admin@schurr.edu"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-white/60 mb-2">Password</label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white focus:outline-none focus:border-schurr-green focus:ring-1 focus:ring-schurr-green transition-all placeholder:text-white/20"
+                  placeholder="••••••••"
+                />
+                <Lock size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20" />
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {!isLogin && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <label className="block text-xs font-bold uppercase text-schurr-green mb-2 mt-4">Master Security Code</label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={securityCode}
+                      onChange={(e) => setSecurityCode(e.target.value)}
+                      required={!isLogin}
+                      className="w-full p-3 bg-schurr-green/10 border border-schurr-green/50 rounded-xl text-white focus:outline-none focus:border-schurr-green focus:ring-1 focus:ring-schurr-green transition-all placeholder:text-white/20"
+                      placeholder="Enter Master Code"
+                    />
+                    <KeyRound size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-schurr-green" />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-schurr-green text-white hover:bg-schurr-green/80 border-0 h-12 shadow-lg shadow-schurr-green/20"
+            >
+              {loading ? <Loader2 className="animate-spin" /> : (isLogin ? 'Authenticate' : 'Register Admin')}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => { setIsLogin(!isLogin); setError(''); }}
+              className="text-xs text-white/40 hover:text-white transition-colors underline"
+            >
+              {isLogin ? "Need an account? Register" : "Already have an account? Login"}
+            </button>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-white/5 text-center">
+            <p className="text-xs text-white/20 font-mono">
+              Restricted Area. Unauthorized access is prohibited.
+            </p>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
-}
+};
+
+export default Login;

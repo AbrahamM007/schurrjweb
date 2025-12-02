@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Copy, Check } from 'lucide-react';
+import { Sparkles, Copy, Check, Wand2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { generateHeadline, rewriteText, summarizeText, generateSocialCaption } from '../../services/gemini';
 
@@ -51,22 +51,25 @@ const AITextTool = () => {
     };
 
     return (
-        <div className="bg-white border-3 border-schurr-black p-8 shadow-brutal">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="bg-schurr-green text-white p-2">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl">
+            <div className="flex items-center gap-3 mb-8">
+                <div className="bg-gradient-to-br from-schurr-green to-schurr-darkGreen text-white p-3 rounded-xl shadow-lg shadow-schurr-green/20">
                     <Sparkles size={24} />
                 </div>
-                <h2 className="text-3xl font-black uppercase tracking-tighter">AI Co-Pilot</h2>
+                <div>
+                    <h2 className="text-2xl font-black uppercase tracking-tighter text-white">AI Co-Pilot</h2>
+                    <p className="text-white/40 text-sm font-mono">Powered by Gemini</p>
+                </div>
             </div>
 
-            <div className="flex gap-2 mb-6 flex-wrap">
+            <div className="flex gap-2 mb-8 flex-wrap">
                 {modes.map((m) => (
                     <button
                         key={m.id}
                         onClick={() => setMode(m.id)}
-                        className={`px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all border-2 ${mode === m.id
-                            ? 'bg-schurr-black text-white border-schurr-black'
-                            : 'bg-white text-schurr-black border-schurr-black hover:bg-gray-100'
+                        className={`px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all rounded-lg border ${mode === m.id
+                            ? 'bg-schurr-green text-white border-schurr-green shadow-lg shadow-schurr-green/20'
+                            : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'
                             }`}
                     >
                         {m.label}
@@ -74,39 +77,60 @@ const AITextTool = () => {
                 ))}
             </div>
 
-            <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-bold uppercase mb-2">Input Text</label>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                    <label className="block text-sm font-bold uppercase text-white/60">Input Text</label>
                     <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Paste your draft here..."
-                        className="w-full h-32 p-4 border-2 border-schurr-black font-serif focus:outline-none focus:border-schurr-green"
+                        className="w-full h-64 p-4 bg-black/20 border border-white/10 rounded-xl text-white font-serif focus:outline-none focus:border-schurr-green focus:ring-1 focus:ring-schurr-green transition-all resize-none placeholder:text-white/20"
                     />
+                    <Button
+                        onClick={handleGenerate}
+                        disabled={!input || loading}
+                        className="w-full bg-white text-schurr-black hover:bg-schurr-green hover:text-white border-0 py-6 text-lg"
+                    >
+                        {loading ? (
+                            <span className="flex items-center gap-2">
+                                <Sparkles className="animate-spin" /> Generating...
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-2">
+                                <Wand2 size={20} /> Generate with AI
+                            </span>
+                        )}
+                    </Button>
                 </div>
 
-                <Button
-                    onClick={handleGenerate}
-                    disabled={!input || loading}
-                    className="w-full"
-                >
-                    {loading ? 'Generating...' : 'Generate with AI'}
-                </Button>
+                <div className="space-y-4">
+                    <label className="block text-sm font-bold uppercase text-white/60">AI Output</label>
+                    <div className="h-64 p-6 bg-schurr-green/5 border border-schurr-green/20 rounded-xl relative overflow-y-auto">
+                        {output ? (
+                            <div className="text-white/90 font-serif text-lg leading-relaxed whitespace-pre-wrap">
+                                {output}
+                            </div>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-white/20 font-mono text-sm">
+                                Output will appear here...
+                            </div>
+                        )}
 
-                {output && (
-                    <div className="relative">
-                        <label className="block text-sm font-bold uppercase mb-2">AI Output</label>
-                        <div className="p-4 bg-gray-50 border-2 border-schurr-green font-serif relative">
-                            {output}
+                        {output && (
                             <button
                                 onClick={handleCopy}
-                                className="absolute top-2 right-2 p-2 hover:bg-white transition-colors"
+                                className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 rounded-lg text-white/60 hover:text-white transition-colors backdrop-blur-sm"
                             >
-                                {copied ? <Check size={20} className="text-green-600" /> : <Copy size={20} />}
+                                {copied ? <Check size={18} className="text-schurr-green" /> : <Copy size={18} />}
                             </button>
-                        </div>
+                        )}
                     </div>
-                )}
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                        <p className="text-xs text-white/40 font-mono text-center">
+                            AI can make mistakes. Please review generated content.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );
