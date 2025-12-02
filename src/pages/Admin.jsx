@@ -5,10 +5,10 @@ import AITextTool from '../components/admin/AITextTool';
 import ArticleForm from '../components/admin/ArticleForm';
 import UploadModal from '../components/admin/UploadModal';
 import Modal from '../components/ui/Modal';
-import { FileText, Image, BookOpen, TrendingUp, Upload, Trash2, Edit, Plus, Settings, User, LogOut } from 'lucide-react';
+import { FileText, Image, BookOpen, TrendingUp, Upload, Trash2, Edit, Plus, Settings, User, LogOut, Folder, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { db } from '../lib/firebase';
-import { collection, getDocs, query, orderBy, limit, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, where } from 'firebase/firestore';
 import { motion } from 'framer-motion';
 
 import OnboardingTour from '../components/admin/OnboardingTour';
@@ -473,20 +473,63 @@ const ChroniclesView = () => {
   );
 };
 
+
+
+// ... (previous imports and components remain unchanged)
+
 const GalleryView = () => {
   const [photos, setPhotos] = useState([]);
+  const [folders, setFolders] = useState([]);
+  const [currentFolder, setCurrentFolder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchFolders = async () => {
+    try {
+      const q = query(collection(db, "gallery_folders"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      const fetchedFolders = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setFolders(fetchedFolders);
+    } catch (error) {
+      console.error("Error fetching folders:", error);
+    }
+  };
 
   const fetchPhotos = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, "gallery"), orderBy("createdAt", "desc"));
+      let q;
+      if (currentFolder) {
+        q = query(
+          collection(db, "gallery"),
+          where("folderId", "==", currentFolder.id),
+          orderBy("createdAt", "desc")
+        );
+      } else {
+        // In root, show only photos with no folderId or folderId is null
+        // Note: Firestore requires an index for this specific query if we mix where and orderBy
+        // For simplicity in this iteration, we might fetch all and filter client side if the dataset is small,
+        // or ensure we have the index. Let's try client-side filtering for root to avoid index issues immediately,
+        // or better, just query for everything and filter.
+        // Actually, let's try the proper query.
+        q = query(collection(db, "gallery"), orderBy("createdAt", "desc"));
+      }
+
       const querySnapshot = await getDocs(q);
-      const fetchedPhotos = querySnapshot.docs.map(doc => ({
+      let fetchedPhotos = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+
+      if (currentFolder) {
+        fetchedPhotos = fetchedPhotos.filter(p => p.folderId === currentFolder.id);
+      } else {
+        fetchedPhotos = fetchedPhotos.filter(p => !p.folderId);
+      }
+
       setPhotos(fetchedPhotos);
     } catch (error) {
       console.error("Error fetching gallery:", error);
@@ -496,8 +539,40 @@ const GalleryView = () => {
   };
 
   useEffect(() => {
-    fetchPhotos();
+    fetchFolders();
   }, []);
+
+  useEffect(() => {
+    fetchPhotos();
+  }, [currentFolder]);
+
+  const handleCreateFolder = async () => {
+    const name = prompt("Enter folder name:");
+    if (!name) return;
+
+    try {
+      await addDoc(collection(db, "gallery_folders"), {
+        name,
+        createdAt: serverTimestamp()
+      });
+      fetchFolders();
+    } catch (error) {
+      console.error("Error creating folder:", error);
+    }
+  };
+
+  const handleDeleteFolder = async (folderId, e) => {
+    e.stopPropagation();
+    if (window.confirm("Delete this folder? Photos inside will not be deleted but will be moved to root (or hidden depending on implementation).")) {
+      try {
+        await deleteDoc(doc(db, "gallery_folders", folderId));
+        // Optional: Update all photos in this folder to have folderId: null
+        fetchFolders();
+      } catch (error) {
+        console.error("Error deleting folder:", error);
+      }
+    }
+  };
 
   const handleUpload = async (uploadedFiles) => {
     try {
@@ -505,6 +580,7 @@ const GalleryView = () => {
         await addDoc(collection(db, "gallery"), {
           url: file.url,
           name: file.name,
+          folderId: currentFolder ? currentFolder.id : null,
           createdAt: serverTimestamp()
         });
       }
@@ -529,40 +605,93 @@ const GalleryView = () => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-black uppercase tracking-tighter text-white">Gallery Manager</h1>
-        <Button onClick={() => setIsModalOpen(true)} className="bg-schurr-green text-white border-0 hover:bg-schurr-green/80">+ Add Photos</Button>
+        <div className="flex items-center gap-4">
+          {currentFolder && (
+            <Button onClick={() => setCurrentFolder(null)} variant="ghost" className="text-white/60 hover:text-white p-2">
+              <ArrowLeft size={24} />
+            </Button>
+          )}
+          <div>
+            <h1 className="text-4xl font-black uppercase tracking-tighter text-white">
+              {currentFolder ? currentFolder.name : 'Gallery Manager'}
+            </h1>
+            {currentFolder && <p className="text-white/40 font-mono text-sm">Folder</p>}
+          </div>
+        </div>
+        <div className="flex gap-3">
+          {!currentFolder && (
+            <Button onClick={handleCreateFolder} variant="outline" className="border-white/20 text-white hover:bg-white/10">
+              <Folder size={18} className="mr-2" /> New Folder
+            </Button>
+          )}
+          <Button onClick={() => setIsModalOpen(true)} className="bg-schurr-green text-white border-0 hover:bg-schurr-green/80">
+            + Add Photos
+          </Button>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="text-white/40 text-center py-20 font-mono">Loading photos...</div>
-      ) : photos.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {photos.map((photo) => (
-            <div key={photo.id} className="group relative aspect-square bg-white/5 rounded-xl overflow-hidden border border-white/10">
-              <img src={photo.url} alt="Gallery" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <button onClick={() => handleDelete(photo.id)} className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
-                  <Trash2 size={20} />
+      {/* Folders Grid (Only show in root) */}
+      {!currentFolder && folders.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-white/60 font-bold uppercase text-sm mb-4">Folders</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {folders.map(folder => (
+              <div
+                key={folder.id}
+                onClick={() => setCurrentFolder(folder)}
+                className="bg-white/5 border border-white/10 p-4 rounded-xl hover:bg-white/10 transition-all cursor-pointer group flex flex-col items-center justify-center aspect-[4/3]"
+              >
+                <Folder size={48} className="text-schurr-green mb-2 group-hover:scale-110 transition-transform" />
+                <span className="text-white font-bold text-center truncate w-full">{folder.name}</span>
+                <button
+                  onClick={(e) => handleDeleteFolder(folder.id, e)}
+                  className="mt-2 p-1 text-white/20 hover:text-red-500 transition-colors"
+                >
+                  <Trash2 size={14} />
                 </button>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="bg-white/5 border border-white/10 p-8 rounded-2xl">
-          <div onClick={() => setIsModalOpen(true)} className="border-2 border-dashed border-white/20 rounded-xl p-12 text-center hover:border-schurr-green/50 hover:bg-white/5 transition-all cursor-pointer group">
-            <Image size={48} className="mx-auto mb-4 text-white/20 group-hover:text-schurr-green transition-colors" />
-            <h3 className="text-xl font-bold mb-2 text-white">Add Photos via URL</h3>
-            <p className="text-white/40 mb-6 font-mono text-sm">Paste links to your images</p>
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">Add Links</Button>
+            ))}
           </div>
         </div>
       )}
 
+      {/* Photos Grid */}
+      <div>
+        <h2 className="text-white/60 font-bold uppercase text-sm mb-4">
+          {photos.length} Photos {currentFolder ? `in ${currentFolder.name}` : ''}
+        </h2>
+
+        {loading ? (
+          <div className="text-white/40 text-center py-20 font-mono">Loading photos...</div>
+        ) : photos.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {photos.map((photo) => (
+              <div key={photo.id} className="group relative aspect-square bg-white/5 rounded-xl overflow-hidden border border-white/10">
+                <img src={photo.url} alt="Gallery" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button onClick={() => handleDelete(photo.id)} className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white/5 border border-white/10 p-8 rounded-2xl">
+            <div onClick={() => setIsModalOpen(true)} className="border-2 border-dashed border-white/20 rounded-xl p-12 text-center hover:border-schurr-green/50 hover:bg-white/5 transition-all cursor-pointer group">
+              <Image size={48} className="mx-auto mb-4 text-white/20 group-hover:text-schurr-green transition-colors" />
+              <h3 className="text-xl font-bold mb-2 text-white">No photos yet</h3>
+              <p className="text-white/40 mb-6 font-mono text-sm">Upload photos to this {currentFolder ? 'folder' : 'gallery'}</p>
+              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">Add Photos</Button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Add Photos from URL"
+        title={`Add Photos to ${currentFolder ? currentFolder.name : 'Gallery'}`}
       >
         <UploadModal
           type="gallery"
