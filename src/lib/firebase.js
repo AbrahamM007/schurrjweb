@@ -14,11 +14,11 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Initialize Firebase
-let app;
-let db;
-let auth;
-let storage;
+let app = null;
+let db = null;
+let auth = null;
+let storage = null;
+let isInitialized = false;
 
 try {
   if (!firebaseConfig.apiKey) {
@@ -28,8 +28,10 @@ try {
   db = getFirestore(app);
   auth = getAuth(app);
   storage = getStorage(app);
+  isInitialized = true;
 } catch (error) {
   console.error("Firebase Initialization Error:", error);
+  isInitialized = false;
 }
 
-export { db, auth, storage };
+export { db, auth, storage, isInitialized };

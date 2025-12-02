@@ -11,7 +11,14 @@ import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
+import { auth, db } from "./lib/firebase";
+import SetupRequired from "./components/ui/SetupRequired";
+
 export default function App() {
+  if (!auth || !db) {
+    return <SetupRequired />;
+  }
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
