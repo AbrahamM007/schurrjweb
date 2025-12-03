@@ -49,7 +49,7 @@ const Footer = () => {
                 </div>
 
                 <div className="mt-16 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 font-mono">
-                    <p>&copy; {new Date().getFullYear()} Schurr Chronicles. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} Schurr Journalism. All rights reserved.</p>
                     {/* <p>Designed with <span className="text-schurr-green">♥</span> by Antigravity</p> */}
                 </div>
             </div>

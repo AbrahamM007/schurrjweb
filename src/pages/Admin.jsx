@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 
 import OnboardingTour from '../components/admin/OnboardingTour';
 import TeamBoard from '../components/admin/TeamBoard';
+import WhiteboardDashboard from '../components/admin/whiteboard/WhiteboardDashboard';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -29,6 +30,8 @@ const Admin = () => {
         return <ChroniclesView />;
       case 'gallery':
         return <GalleryView />;
+      case 'whiteboard':
+        return <WhiteboardDashboard />;
       case 'ai-copilot':
         return <AICopilotView />;
       case 'settings':

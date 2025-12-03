@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, FileText, Image, BookOpen, Sparkles, Settings, LogOut, Users } from 'lucide-react';
+import { LayoutDashboard, FileText, Image, BookOpen, Sparkles, Settings, LogOut, Users, Presentation } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const AdminSidebar = ({ activeTab, setActiveTab }) => {
@@ -10,6 +10,7 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
         { id: 'articles', label: 'Articles', icon: FileText },
         { id: 'chronicles', label: 'Chronicles', icon: BookOpen },
         { id: 'gallery', label: 'Gallery', icon: Image },
+        { id: 'whiteboard', label: 'Whiteboard', icon: Presentation },
         { id: 'ai-copilot', label: 'AI Co-Pilot', icon: Sparkles },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];

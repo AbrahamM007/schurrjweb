@@ -16,14 +16,20 @@
     "@tiptap/react": "^3.11.1",
     "@tiptap/starter-kit": "^3.11.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "firebase": "^12.6.0",
     "framer-motion": "^12.23.25",
+    "konva": "^10.0.12",
     "lucide-react": "^0.555.0",
     "openai": "^6.9.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-konva": "^19.2.1",
+    "react-konva-utils": "^2.0.0",
     "react-router-dom": "^7.9.6",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "use-image": "^1.1.4",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
