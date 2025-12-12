@@ -9,6 +9,8 @@ import { FileText, Image, BookOpen, TrendingUp, Upload, Trash2, Edit, Plus, Sett
 import { Button } from '../components/ui/Button';
 import { db } from '../lib/firebase';
 import { collection, getDocs, query, orderBy, limit, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, where } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 import { motion } from 'framer-motion';
 
 import OnboardingTour from '../components/admin/OnboardingTour';
@@ -716,6 +718,15 @@ const AICopilotView = () => {
 };
 
 const SettingsView = () => {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // ProtectedRoute will handle redirect to login
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <h1 className="text-4xl font-black uppercase tracking-tighter text-white mb-8">Settings</h1>
@@ -756,6 +767,17 @@ const SettingsView = () => {
               Save Changes
             </Button>
           </div>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-white/10">
+          <h3 className="text-white font-bold mb-4">Account Actions</h3>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="w-full justify-start text-red-500 border-red-500/20 hover:bg-red-500/10 hover:border-red-500/50"
+          >
+            <LogOut size={18} className="mr-2" /> Sign Out
+          </Button>
         </div>
       </div>
     </motion.div>
