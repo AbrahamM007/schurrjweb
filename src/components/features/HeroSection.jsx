@@ -80,12 +80,17 @@ const HeroSection = () => {
                             <span className="relative font-bold tracking-wide">Start Reading</span>
                         </button>
 
-                        <button className="flex items-center gap-3 text-white/80 hover:text-white transition-colors group">
+                        <a
+                            href="https://www.youtube.com/watch?v=HntBQYIuvH4&list=PLvZfEAZAUMAr8Z5OFvdm3LgknvRWas_LL&index=1"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 text-white/80 hover:text-white transition-colors group"
+                        >
                             <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white/10 transition-colors">
                                 <Play size={20} fill="currentColor" className="ml-1" />
                             </div>
                             <span className="font-medium">Watch Showreel</span>
-                        </button>
+                        </a>
                     </motion.div>
                 </motion.div>
             </div>
