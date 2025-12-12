@@ -54,22 +54,8 @@ const Footer = () => {
                             </a>
                         </div>
 
-                        {/* Quick Stats */}
-                        <div className="flex gap-8 border-t border-white/10 pt-8 max-w-md">
-                            <div>
-                                <div className="text-2xl font-black text-schurr-gold mb-0.5">2K+</div>
-                                <div className="text-xs text-white/40 uppercase tracking-wider">Readers</div>
-                            </div>
-                            <div>
-                                <div className="text-2xl font-black text-schurr-green mb-0.5">500+</div>
-                                <div className="text-xs text-white/40 uppercase tracking-wider">Stories</div>
-                            </div>
-                            <div>
-                                <div className="text-2xl font-black text-white mb-0.5">1972</div>
-                                <div className="text-xs text-white/40 uppercase tracking-wider">Est.</div>
-                            </div>
-                        </div>
-                    </div>
+                        
+                    </div> 
 
                     {/* Navigation Links */}
                     <div className="lg:col-span-2 lg:col-start-8">
