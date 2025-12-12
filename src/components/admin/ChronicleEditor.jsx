@@ -7,7 +7,6 @@ import {
     Bold, Italic, List, ListOrdered, Quote, Undo, Redo,
     Sparkles, Save, X, Loader2, Wand2, AlignLeft
 } from 'lucide-react';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const ChronicleEditor = ({ initialContent = '', onSave, onCancel }) => {
     const [isAiLoading, setIsAiLoading] = useState(false);
@@ -40,36 +39,50 @@ const ChronicleEditor = ({ initialContent = '', onSave, onCancel }) => {
 
         setIsAiLoading(true);
         try {
-            const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const OpenAI = (await import("openai")).default;
+            const client = new OpenAI({
+                apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+                dangerouslyAllowBrowser: true
+            });
 
             const context = editor.getText();
             const selection = editor.state.selection;
-            const selectedText = editor.state.doc.textBetween(selection.from, selection.to, ' '); // Get selected text
+            const selectedText = editor.state.doc.textBetween(selection.from, selection.to, ' ');
 
-            let fullPrompt = "";
+            let systemPrompt = "You are an AI assistant for a high school newspaper.";
+            let userPrompt = "";
 
             switch (aiMode) {
                 case 'Remix':
-                    fullPrompt = `Original Text: "${selectedText || context.slice(-500)}"\n\nTask: Rewrite this text to be "${aiPrompt}". Keep the core meaning but change the tone/style completely.`;
+                    systemPrompt += " Your task is to rewrite the provided text.";
+                    userPrompt = `Original Text: "${selectedText || context.slice(-500)}"\n\nTask: Rewrite this text to be "${aiPrompt}". Keep the core meaning but change the tone/style completely.`;
                     break;
                 case 'Interview':
-                    fullPrompt = `Task: Generate a realistic, engaging interview transcript between a student reporter and "${aiPrompt}". \n\nTopic: The user input describes the persona and topic. Create 3-4 Q&A exchanges. Format as "Reporter: [Question]" and "[Name]: [Answer]".`;
+                    systemPrompt += " Your task is to generate a realistic interview transcript.";
+                    userPrompt = `Task: Generate a realistic, engaging interview transcript between a student reporter and "${aiPrompt}". \n\nTopic: The user input describes the persona and topic. Create 3-4 Q&A exchanges. Format as "Reporter: [Question]" and "[Name]: [Answer]".`;
                     break;
                 case 'Headlines':
-                    fullPrompt = `Article Content: "${context.slice(0, 1000)}..."\n\nTask: Generate 5 viral, catchy, and professional headlines for this school newspaper article. Return ONLY the list of headlines.`;
+                    systemPrompt += " Your task is to generate viral headlines.";
+                    userPrompt = `Article Content: "${context.slice(0, 1000)}..."\n\nTask: Generate 5 viral, catchy, and professional headlines for this school newspaper article. Return ONLY the list of headlines.`;
                     break;
                 case 'Draft':
                 default:
-                    fullPrompt = context
+                    systemPrompt += " Your task is to write journalistic content.";
+                    userPrompt = context
                         ? `Context: "${context.slice(-500)}"\n\nTask: ${aiPrompt}\n\nWrite in a journalistic, engaging style suitable for a school newspaper.`
                         : `Task: ${aiPrompt}\n\nWrite in a journalistic, engaging style suitable for a school newspaper.`;
                     break;
             }
 
-            const result = await model.generateContent(fullPrompt);
-            const response = result.response;
-            const text = response.text();
+            const completion = await client.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+            });
+
+            const text = completion.choices[0].message.content;
 
             // Insert logic based on mode
             if (aiMode === 'Headlines') {

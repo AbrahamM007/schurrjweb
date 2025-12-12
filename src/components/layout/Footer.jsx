@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Twitter, Youtube, Mail, MapPin, ArrowRight } from 'lucide-react';
+import { Instagram, Twitter, Youtube, Mail, MapPin, ArrowRight, Sparkles } from 'lucide-react';
 
 const Footer = () => {
     return (
@@ -54,8 +54,8 @@ const Footer = () => {
                             </a>
                         </div>
 
-                        
-                    </div> 
+
+                    </div>
 
                     {/* Navigation Links */}
                     <div className="lg:col-span-2 lg:col-start-8">
@@ -140,7 +140,15 @@ const Footer = () => {
                             <a href="#" className="hover:text-white transition-colors">Privacy</a>
                             <a href="#" className="hover:text-white transition-colors">Terms</a>
                             <a href="#" className="hover:text-white transition-colors">Accessibility</a>
-                            <a href="https://moratadeo.com" target="_blank" rel="noopener noreferrer" className="hover:text-schurr-gold transition-colors font-medium">Made by Moratadeo</a>
+                            <a
+                                href="https://moratadeo.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 hover:border-schurr-gold/50 hover:bg-schurr-gold/10 transition-all duration-300 group ml-4"
+                            >
+                                <Sparkles size={12} className="text-schurr-gold group-hover:rotate-12 transition-transform" />
+                                <span className="text-xs font-medium text-white/60 group-hover:text-schurr-gold transition-colors">Made by Moratadeo</span>
+                            </a>
                         </div>
                     </div>
                 </div>
